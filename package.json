@@ -1,0 +1,34 @@
+{
+  "name": "cookbook",
+  "version": "1.0.0",
+  "description": "Items and recipies editor",
+  "main": "index.tsx",
+  "dependencies": {
+    "@types/react": "^16.0.31",
+    "@types/react-dom": "^16.0.3",
+    "css-loader": "^0.28.7",
+    "file-loader": "^1.1.6",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "semantic-ui-css": "^2.2.12",
+    "semantic-ui-react": "^0.77.1",
+    "style-loader": "^0.19.1",
+    "typescript": "^2.6.2",
+    "url-loader": "^0.6.2"
+  },
+  "devDependencies": {
+    "awesome-typescript-loader": "^3.4.1",
+    "html-webpack-plugin": "^2.30.1",
+    "lite-server": "^2.3.0",
+    "source-map-loader": "^0.2.3",
+    "webpack": "^3.10.0"
+  },
+  "scripts": {
+    "start": "lite-server --baseDir=dist",
+    "build": "webpack",
+    "build_wait": "webpack -w",
+    "build_release": "webpack -p --progress --config webpack.release.config.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
