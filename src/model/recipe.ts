@@ -25,5 +25,5 @@ export class Output {
 export class Recipe {
     input = new Array<Ingredient>()
     output = new Array<Output>()
-    tags = new Tags
+    tags = new Tags()
 }

@@ -1,9 +1,17 @@
+import { TrackableArray, Trackable } from './trackable';
 
 export type Tag = string
 
-export class Tags{
-    tags:Array<Tag> = new Array<Tag>()
+export class Tags implements Trackable<string>{
+    tags = new TrackableArray<Tag>()
     tagsMap:{[key:string]:boolean} = {}
+    get modified():boolean{
+        return this.tags.modified
+    }
+    ack()
+    {
+        this.tags.ack()
+    }
     add(tag:Tag)
     {
         if(!this.tagsMap[tag]) {
@@ -14,12 +22,20 @@ export class Tags{
     remove(tag:Tag)
     {
         if(this.tagsMap[tag]) {
-            this.tags=this.tags.filter(val=>val!=tag)
+            this.tags.remove(tag, (a,b)=>a==b)
             delete this.tagsMap[tag]
         }
     }
     contains(tag:Tag)
     {
         return this.tagsMap[tag]
+    }
+    mark()
+    {
+        this.tags.mark()
+    }
+    clone()
+    {
+        return this.tags.clone()
     }
 }

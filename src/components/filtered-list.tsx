@@ -15,6 +15,7 @@ interface FilteredListProps<T>{
     columns?:GridProps["columns"]
     onDelete?:(val:T)=>void
     onSelect?:(val:T)=>void
+    content?:JSX.Element
 }
 
 interface FilteredListState{
@@ -81,10 +82,26 @@ export class FilteredList<T> extends React.Component<FilteredListProps<T>, any> 
             rows.push(<Grid.Row key={i}>{row}</Grid.Row>)
         }
 
+        let header = [
+            <Grid.Column>
+                <Input action={{icon:"delete", onClick:()=>this.setState({filter:""})}} 
+                    value={this.state.filter} 
+                    onChange={(e)=>this.onFilterChange(e.currentTarget.value)} 
+                    placeholder="Search..."/>
+            </Grid.Column>
+        ]
+        if(this.props.content) {
+            header.push(
+                <Grid.Column>
+                    this.props.content
+                </Grid.Column>
+            )
+        }
+
         return (
             <Grid centered columns={this.props.columns}>
-                <Grid.Row columnds={1}>
-                    <Grid.Column><Input onChange={(e)=>this.onFilterChange(e.currentTarget.value)} placeholder="Search..."/></Grid.Column>
+                <Grid.Row columnds={header.length}>
+                    {header}
                 </Grid.Row>
                 {rows}
             </Grid>

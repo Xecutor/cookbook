@@ -6,27 +6,41 @@ import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
 import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
 
 interface TagsPageProps{
-    tags:Tags
+    tags:string[]
     onAddTag:(tag:Tag)=>void
     onDelTag:(tag:Tag)=>void
 }
 
-export class TagsPage extends React.Component<TagsPageProps, any> {
-    newTag:string
+interface TagsPageState{
+    newTagName:string
+}
+
+export class TagsPage extends React.Component<TagsPageProps, TagsPageState> {
+    constructor(props:TagsPageProps) {
+        super(props)
+        this.state={
+            newTagName:''
+        }
+    }
     onAddTag() {
-        this.props.onAddTag(this.newTag)
+        this.props.onAddTag(this.state.newTagName)
+        this.setState({newTagName:''})
     }
     render() {
         return (
             <div>
-                <Input onChange={(e)=>this.newTag=e.currentTarget.value} placeholder="New tag"/><Button onClick={()=>this.onAddTag()} icon="add"/>
+                <Input 
+                    onChange={(e)=>this.setState({newTagName:e.currentTarget.value})}
+                    placeholder="New tag" value={this.state.newTagName}
+                    action={{icon:"add", onClick:()=>this.onAddTag()}}
+                    />
                 <FilteredList 
                     columns={4} 
                     filter={simpleStringFilter} 
                     haveDelete={true} 
                     onDelete={this.props.onDelTag}
                     isButton={true} 
-                    list={this.props.tags.tags}
+                    list={this.props.tags}
                     />
             </div>
         )

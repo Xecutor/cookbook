@@ -5,43 +5,65 @@ import { Tab } from 'semantic-ui-react';
 
 import 'semantic-ui-css/semantic.min.css';
 
-import { Model } from "../model/model";
+import { Model, ModelState } from "../model/model";
 import { TagsPage } from "./tags-page";
 import { Tag } from "../model/tags";
 import { PropertiesPage } from "./properties-page";
 import { PropertyDecl, PropertyClass, PropertyType } from "../model/property";
 
-interface CookBookAppState{
-    model:Model
+interface CookBookAppState extends ModelState{
 }
 
 export class CookBookApp extends React.Component<any, CookBookAppState> {
+    model = new Model()
     constructor(props:any)
     {
         super(props)
-        this.state={
-            model:new Model()
-        }
         for(let i=0;i<20;++i) {
-            this.state.model.tags.add(`item${i}`)
+            this.model.tags.add(`item${i}`)
         }
-        this.state.model.properties.push(new PropertyDecl(PropertyClass.item, "test", PropertyType.string))
+        this.model.properties.push(new PropertyDecl(PropertyClass.item, "Test", PropertyType.string))
+        this.state=this.model.getStateUpdate()
     }
     onAddTag(tag:Tag)
     {
-        this.state.model.tags.add(tag)
-        this.forceUpdate()
+        this.model.tags.add(tag)
+        this.updateStateFromModel()
     }
     onDelTag(tag:Tag)
     {
-        this.state.model.tags.remove(tag)
-        this.forceUpdate()
+        this.model.tags.remove(tag)
+        this.updateStateFromModel()
+    }
+    onAddProp(newProp:PropertyDecl) {
+        this.model.properties.push(newProp)
+        this.updateStateFromModel()
+    }
+    onUpdateProp(updatedProp:PropertyDecl) {
+        for(let prop of this.model.properties.array) {
+            if(prop.name == updatedProp.name) {
+                prop.type = updatedProp.type
+                this.model.properties.mark()
+                break;
+            }
+        }
+        this.updateStateFromModel()
+    }
+    onDeleteProp(propToDel:PropertyDecl) {
+
+    }
+    updateStateFromModel() {
+        this.setState(this.model.getStateUpdate())
     }
     render()
     {
         const panes = [
-            {menuItem:'Tags', render:()=><TagsPage tags={this.state.model.tags} onAddTag={(tag)=>this.onAddTag(tag)} onDelTag={tag=>this.onDelTag(tag)}/>},
-            {menuItem:'Properties', render:()=><PropertiesPage declarations={this.state.model.properties}/>},
+            {menuItem:'Tags', render:()=><TagsPage tags={this.state.tags} onAddTag={(tag)=>this.onAddTag(tag)} onDelTag={tag=>this.onDelTag(tag)}/>},
+            {menuItem:'Properties', render:()=><PropertiesPage 
+                                                   declarations={this.state.properties} 
+                                                   onAddProp={newProp=>this.onAddProp(newProp)}
+                                                   onUpdateProp={updProp=>this.onUpdateProp(updProp)}
+                                                   />},
             {menuItem:'Items', render:()=><div>items</div>},
             {menuItem:'Resources', render:()=><div>resources</div>},
             {menuItem:'Crafting Methods', render:()=><div>cmethods</div>},
