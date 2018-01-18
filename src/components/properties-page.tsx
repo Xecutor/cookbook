@@ -12,6 +12,7 @@ interface PropertiesPageProps{
     declarations : Array<PropertyDecl>
     onAddProp:(newProp:PropertyDecl)=>void
     onUpdateProp:(updatedProp:PropertyDecl)=>void
+    onDeleteProp:(deletedProp:PropertyDecl)=>void
 }
 
 interface PropertiesPageState{
@@ -63,7 +64,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
                     <Dropdown 
                         floating options={options} value={prop.type} 
                         onChange={(e,d)=>this.onPropTypeChange(prop, d.value as number)}/>
-                    <Button size="mini" icon="delete" color="red"/>
+                    <Button size="mini" icon="delete" color="red" onClick={()=>this.props.onDeleteProp(prop)}/>
                 </Label>
             )
     }
@@ -131,24 +132,54 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
                 }
                 <Grid.Row>
                     <Grid.Column>
-                        <Input onChange={e=>this.setState({itemPropNewName:e.currentTarget.value})} placeholder="New property" action>
+                        <Input onChange={e=>this.setState({itemPropNewName:e.currentTarget.value})} value={this.state.itemPropNewName} placeholder="New property" action>
                             <input/>
-                            <Select onChange={(e,d)=>this.setState({itemPropType:d.value as number})} options={makePropertyTypeOptions()} placeholder="Select type"/>
-                            <Button icon="add" onClick={()=>this.onAddProp(PropertyClass.item)}/>
+                            <Select 
+                                onChange={(e,d)=>this.setState({itemPropType:d.value as number})} 
+                                options={makePropertyTypeOptions()} 
+                                value={this.state.itemPropType}
+                                placeholder="Select type"/>
+                            <Button 
+                                icon="add"
+                                onClick={()=>this.onAddProp(PropertyClass.item)}
+                                disabled={
+                                    !this.state.itemPropNewName.length ||
+                                    this.state.itemPropType == -1 ||
+                                    this.props.declarations.some(val=>val.name==this.state.itemPropNewName && val.pclass==PropertyClass.item)}/>
                         </Input>
                     </Grid.Column>
                     <Grid.Column>
-                        <Input onChange={e=>this.setState({resPropNewName:e.currentTarget.value})} placeholder="New property" action>
+                        <Input onChange={e=>this.setState({resPropNewName:e.currentTarget.value})} value={this.state.resPropNewName} placeholder="New property" action>
                             <input/>
-                            <Select onChange={(e,d)=>this.setState({resPropType:d.value as number})} options={makePropertyTypeOptions()} placeholder="Select type"/>
-                            <Button icon="add" onClick={()=>this.onAddProp(PropertyClass.resource)}/>
+                            <Select 
+                                onChange={(e,d)=>this.setState({resPropType:d.value as number})} 
+                                options={makePropertyTypeOptions()} 
+                                value={this.state.resPropType}
+                                placeholder="Select type"/>
+                            <Button 
+                                icon="add"
+                                onClick={()=>this.onAddProp(PropertyClass.resource)}
+                                disabled={
+                                    !this.state.resPropNewName.length ||
+                                    this.state.resPropType == -1 ||
+                                    this.props.declarations.some(val=>val.name==this.state.resPropNewName && val.pclass==PropertyClass.resource)}/>
                         </Input>
                     </Grid.Column>
                     <Grid.Column>
-                        <Input onChange={e=>this.setState({craftPropNewName:e.currentTarget.value})} placeholder="New property" action>
+                        <Input onChange={e=>this.setState({craftPropNewName:e.currentTarget.value})} value={this.state.craftPropNewName} placeholder="New property" action>
                             <input/>
-                            <Select onChange={(e,d)=>this.setState({craftPropType:d.value as number})} options={makePropertyTypeOptions()} placeholder="Select type"/>
-                            <Button icon="add" onClick={()=>this.onAddProp(PropertyClass.crafter)}/>
+                            <Select 
+                                onChange={(e,d)=>this.setState({craftPropType:d.value as number})} 
+                                options={makePropertyTypeOptions()} 
+                                value={this.state.craftPropType}
+                                placeholder="Select type"/>
+                            <Button 
+                                icon="add"
+                                onClick={()=>this.onAddProp(PropertyClass.crafter)}
+                                disabled={
+                                    !this.state.craftPropNewName.length ||
+                                    this.state.craftPropType == -1 ||
+                                    this.props.declarations.some(val=>val.name==this.state.craftPropNewName && val.pclass==PropertyClass.crafter)}/>
                         </Input>
                     </Grid.Column>
                 </Grid.Row>

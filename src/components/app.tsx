@@ -36,12 +36,15 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
         this.updateStateFromModel()
     }
     onAddProp(newProp:PropertyDecl) {
+        if(this.model.properties.find(newProp, (a,b)=>a.name==b.name && a.pclass==b.pclass) {
+            return;
+        }
         this.model.properties.push(newProp)
         this.updateStateFromModel()
     }
     onUpdateProp(updatedProp:PropertyDecl) {
         for(let prop of this.model.properties.array) {
-            if(prop.name == updatedProp.name) {
+            if(prop.name == updatedProp.name && prop.pclass==updatedProp.pclass) {
                 prop.type = updatedProp.type
                 this.model.properties.mark()
                 break;
@@ -50,7 +53,8 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
         this.updateStateFromModel()
     }
     onDeleteProp(propToDel:PropertyDecl) {
-
+        this.model.properties.remove(propToDel, (a,b)=>a.name==b.name && a.pclass==b.pclass);
+        this.updateStateFromModel()
     }
     updateStateFromModel() {
         this.setState(this.model.getStateUpdate())
@@ -63,6 +67,7 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
                                                    declarations={this.state.properties} 
                                                    onAddProp={newProp=>this.onAddProp(newProp)}
                                                    onUpdateProp={updProp=>this.onUpdateProp(updProp)}
+                                                   onDeleteProp={updProp=>this.onDeleteProp(updProp)}
                                                    />},
             {menuItem:'Items', render:()=><div>items</div>},
             {menuItem:'Resources', render:()=><div>resources</div>},
