@@ -10,6 +10,8 @@ import { TagsPage } from "./tags-page";
 import { Tag } from "../model/tags";
 import { PropertiesPage } from "./properties-page";
 import { PropertyDecl, PropertyClass, PropertyType } from "../model/property";
+import { ItemsPage } from "./items-page";
+import { Item } from "../model/item";
 
 interface CookBookAppState extends ModelState{
 }
@@ -23,6 +25,8 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
             this.model.tags.add(`item${i}`)
         }
         this.model.properties.push(new PropertyDecl(PropertyClass.item, "Test", PropertyType.string))
+        this.model.items.push(new Item)
+        this.model.items.array[0].name="item1"
         this.state=this.model.getStateUpdate()
     }
     onAddTag(tag:Tag)
@@ -36,7 +40,7 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
         this.updateStateFromModel()
     }
     onAddProp(newProp:PropertyDecl) {
-        if(this.model.properties.find(newProp, (a,b)=>a.name==b.name && a.pclass==b.pclass) {
+        if(this.model.properties.find(newProp, (a,b)=>a.name==b.name && a.pclass==b.pclass)) {
             return;
         }
         this.model.properties.push(newProp)
@@ -69,7 +73,7 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
                                                    onUpdateProp={updProp=>this.onUpdateProp(updProp)}
                                                    onDeleteProp={updProp=>this.onDeleteProp(updProp)}
                                                    />},
-            {menuItem:'Items', render:()=><div>items</div>},
+            {menuItem:'Items', render:()=><ItemsPage items={this.state.items} props={this.state.properties.filter(p=>p.pclass==PropertyClass.item)}/>},
             {menuItem:'Resources', render:()=><div>resources</div>},
             {menuItem:'Crafting Methods', render:()=><div>cmethods</div>},
             {menuItem:'Recipes', render:()=><div>recipes</div>},

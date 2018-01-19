@@ -9,7 +9,7 @@ import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
 interface FilteredListProps<T>{
     list:Array<T>
     renderItem?:((val:T)=>string)|((val:T)=>JSX.Element)
-    filter?:(val:T,filterText:string)=>boolean
+    filter:(val:T,filterText:string)=>boolean
     haveDelete? : boolean
     isButton? : boolean
     columns?:GridProps["columns"]
