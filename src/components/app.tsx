@@ -13,6 +13,8 @@ import { PropertyDecl, PropertyClass, PropertyType } from "../model/property";
 import { ItemsPage } from "./items-page";
 import { Item } from "../model/item";
 
+require('offline-plugin/runtime').install();
+
 interface CookBookAppState extends ModelState{
 }
 
@@ -21,12 +23,6 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
     constructor(props:any)
     {
         super(props)
-        for(let i=0;i<20;++i) {
-            this.model.tags.add(`item${i}`)
-        }
-        this.model.properties.push(new PropertyDecl(PropertyClass.item, "Test", PropertyType.string))
-        this.model.items.push(new Item)
-        this.model.items.array[0].name="item1"
         this.state=this.model.getStateUpdate()
     }
     onAddTag(tag:Tag)
@@ -50,6 +46,7 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
         for(let prop of this.model.properties.array) {
             if(prop.name == updatedProp.name && prop.pclass==updatedProp.pclass) {
                 prop.type = updatedProp.type
+                prop.isRequired = updatedProp.isRequired
                 this.model.properties.mark()
                 break;
             }

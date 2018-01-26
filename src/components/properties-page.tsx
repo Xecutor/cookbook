@@ -7,6 +7,7 @@ import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
 import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
 import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
 import Select from "semantic-ui-react/dist/commonjs/addons/Select/Select";
+import Checkbox from "semantic-ui-react/dist/commonjs/modules/Checkbox/Checkbox";
 
 interface PropertiesPageProps{
     declarations : Array<PropertyDecl>
@@ -15,13 +16,14 @@ interface PropertiesPageProps{
     onDeleteProp:(deletedProp:PropertyDecl)=>void
 }
 
+interface NewPropInfo{
+    name:string
+    type:number
+    req:boolean
+}
+
 interface PropertiesPageState{
-    itemPropNewName:string
-    itemPropType:PropertyType
-    resPropNewName:string
-    resPropType:PropertyType
-    craftPropNewName:string
-    craftPropType:PropertyType
+    newProp:Array<NewPropInfo>
 }
 
 function makePropertyTypeOptions()
@@ -42,147 +44,162 @@ function makePropertyTypeOptions()
 export class PropertiesPage extends React.Component<PropertiesPageProps, PropertiesPageState> {
     constructor(prop:PropertiesPageProps) {
         super(prop)
+        let newProp = []
+        for(let i=0;i<3;++i) {
+            newProp.push({
+                name:'',
+                type:-1,
+                req:undefined
+            })
+        }
         this.state = {
-            itemPropNewName :'',
-            itemPropType:-1,
-            resPropNewName : '',
-            resPropType : -1,
-            craftPropNewName : '',
-            craftPropType : -1
+            newProp:newProp
         }
     }
     onPropTypeChange(prop:PropertyDecl, newType:PropertyType) {
-        let updatedProp = new PropertyDecl(prop.pclass, prop.name, newType);
+        let updatedProp = new PropertyDecl(prop.pclass, prop.name, newType, prop.isRequired);
+        this.props.onUpdateProp(updatedProp)
+    }
+
+    onPropReqChange(prop:PropertyDecl, newReq:boolean) {
+        let updatedProp = new PropertyDecl(prop.pclass, prop.name, prop.type, newReq)
         this.props.onUpdateProp(updatedProp)
     }
 
     propToComp(prop:PropertyDecl) {
         let options = makePropertyTypeOptions()
+        let defaultValue;
+        if(prop.type==PropertyType.boolean) {
+            defaultValue  = <Checkbox fitted checked/>
+        }
+        else if(prop.type==PropertyType.string) {
+            defaultValue = <Input/>
+        }
         return (
                 <Label>
                     {prop.name}&nbsp;:&nbsp;
-                    <Dropdown 
+                    <Dropdown
                         floating options={options} value={prop.type} 
                         onChange={(e,d)=>this.onPropTypeChange(prop, d.value as number)}/>
+                    <Dropdown
+                        floating options={[{text:"req", value:1}, {text:"opt", value:0}]}
+                        value={prop.isRequired?1:0}
+                        onChange={(e,d)=>this.onPropReqChange(prop, !!(d.value as number))}/>
+                    {defaultValue}
                     <Button size="mini" icon="delete" color="red" onClick={()=>this.props.onDeleteProp(prop)}/>
                 </Label>
             )
     }
 
     onAddProp(pclass:PropertyClass) {
-        let name : string;
-        let type : PropertyType
-        if(pclass == PropertyClass.item) {
-            name = this.state.itemPropNewName
-            type = this.state.itemPropType
-            this.setState({itemPropNewName:'', itemPropType:-1})
-        }
-        else if(pclass == PropertyClass.resource) {
-            name = this.state.resPropNewName
-            type = this.state.resPropType
-            this.setState({resPropNewName:'', resPropType:-1})
-        } if(pclass == PropertyClass.crafter) {
-            name = this.state.craftPropNewName
-            type = this.state.craftPropType
-            this.setState({craftPropNewName:'', craftPropType:-1})
-        }
-        let newProp = new PropertyDecl(pclass, name, type);
+        let name = this.state.newProp[pclass].name
+        let type = this.state.newProp[pclass].type
+        let isReq = this.state.newProp[pclass].req
+        let stateProp = [...this.state.newProp]
+        stateProp[pclass].name=''
+        stateProp[pclass].type = -1
+        stateProp[pclass].req = undefined
+        this.setState({newProp:stateProp})
+        let newProp = new PropertyDecl(pclass, name, type, isReq);
         this.props.onAddProp(newProp)
     }
 
-    render()
-    {
-        let itemProps = this.props.declarations.filter(item => item.pclass == PropertyClass.item)
-        let resProps = this.props.declarations.filter(item => item.pclass == PropertyClass.resource)
-        let craftProps = this.props.declarations.filter(item => item.pclass == PropertyClass.crafter)
+    onUpdateNewName(idx:number, newName:string) {
+        let stateProp = [...this.state.newProp]
+        stateProp[idx].name = newName
+        this.setState({newProp:stateProp})
+    }
+
+    onUpdateNewType(idx:number, newType:number) {
+        let stateProp = [...this.state.newProp]
+        stateProp[idx].type = newType
+        this.setState({newProp:stateProp})
+    }
+
+    onUpdateNewReq(idx:number, newReq:number) {
+        let stateProp = [...this.state.newProp]
+        stateProp[idx].req = !!newReq
+        this.setState({newProp:stateProp})
+    }
+
+    render() {
+        let itemCols : Array<JSX.Element> = [];
+        let resCols : Array<JSX.Element> = [];
+        let craftCols : Array<JSX.Element> = [];
+        let rowsArr=[itemCols, resCols, craftCols]
+
+        let idx = 0;
+        for(let prop of this.props.declarations) {
+            rowsArr[prop.pclass].push(<Grid.Column key={`${prop.pclass}x${idx++}`}>{this.propToComp(prop)}</Grid.Column>)
+        }
+
+        for (let i of [PropertyClass.item, PropertyClass.resource, PropertyClass.crafter]) {
+            let reqValue : {[key:string]:number} = {}
+            if(typeof this.state.newProp[i].req === "boolean") {
+                reqValue["value"] = this.state.newProp[i].req ? 1 : 0
+            }
+            let typeValue : {[key:string]:number} = {}
+            if (this.state.newProp[i].type != -1) {
+                typeValue["value"] = this.state.newProp[i].type
+            }
+            rowsArr[i].push(
+                <Grid.Column key={`f${i}`}>
+                    <Input onChange={e => this.onUpdateNewName(i, e.currentTarget.value)} value={this.state.newProp[i].name} placeholder="New property" action>
+                        <input />
+                        <Select
+                            onChange={(e, d) => this.onUpdateNewType(i, d.value as number)}
+                            options={makePropertyTypeOptions()}
+                            {...typeValue}
+                            placeholder="Select type" />
+                        <Select
+                            onChange={(e, d) => this.onUpdateNewReq(i, d.value as number)}
+                            options={[{text:"req",value:1}, {"text":"opt",value:0}]}
+                            {...reqValue}
+                            placeholder="Required or optional"
+                        />
+                        <Button
+                            icon="add"
+                            onClick={() => this.onAddProp(i)}
+                            disabled={
+                                !this.state.newProp[i].name.length ||
+                                this.state.newProp[i].type == -1 ||
+                                this.state.newProp[i].req === undefined ||
+                                this.props.declarations.some(val => val.name == this.state.newProp[i].name && val.pclass == i)} />
+                    </Input>
+                </Grid.Column>)
+        }
 
         let rows=[]
-        for (let idx = 0; idx < itemProps.length || idx < resProps.length || idx < craftProps.length; ++idx) {
+        let maxCol = 0;
+        for (let a of rowsArr) {
+            if (a.length > maxCol) {
+                maxCol = a.length
+            }
+        }
+        for (let idx = 0; idx < maxCol; ++idx) {
             let row = []
-            if (idx < itemProps.length) {
-                row.push(<Grid.Column>{this.propToComp(itemProps[idx])}</Grid.Column>)
+            let i=0
+            for (let a of rowsArr) {
+                if (idx < a.length) {
+                    row.push(a[idx])
+                }
+                else {
+                    row.push(<Grid.Column key={`e${i++}x${idx}`}></Grid.Column>)
+                }
             }
-            else {
-                row.push(<Grid.Column></Grid.Column>)
-            }
-            if (idx < resProps.length) {
-                row.push(<Grid.Column>{this.propToComp(resProps[idx])}</Grid.Column>)
-            }
-            else {
-                row.push(<Grid.Column></Grid.Column>)
-            }
-            if (idx < craftProps.length) {
-                row.push(<Grid.Column>{this.propToComp(craftProps[idx])}</Grid.Column>)
-            }
-            else {
-                row.push(<Grid.Column></Grid.Column>)
-            }
-            rows.push(row)
+            rows.push(<Grid.Row key={`r${idx}`}>{row}</Grid.Row>)
         }
 
         return (
             <Grid centered columns={3}>
-                <Grid.Row>
-                    <Grid.Column>Items</Grid.Column>
-                    <Grid.Column>Resources</Grid.Column>
-                    <Grid.Column>Crafters</Grid.Column>
+                <Grid.Row key="h">
+                    <Grid.Column key="h1">Items</Grid.Column>
+                    <Grid.Column key="h2">Resources</Grid.Column>
+                    <Grid.Column key="h3">Crafters</Grid.Column>
                 </Grid.Row>
                 {
                     rows
                 }
-                <Grid.Row>
-                    <Grid.Column>
-                        <Input onChange={e=>this.setState({itemPropNewName:e.currentTarget.value})} value={this.state.itemPropNewName} placeholder="New property" action>
-                            <input/>
-                            <Select 
-                                onChange={(e,d)=>this.setState({itemPropType:d.value as number})} 
-                                options={makePropertyTypeOptions()} 
-                                value={this.state.itemPropType}
-                                placeholder="Select type"/>
-                            <Button 
-                                icon="add"
-                                onClick={()=>this.onAddProp(PropertyClass.item)}
-                                disabled={
-                                    !this.state.itemPropNewName.length ||
-                                    this.state.itemPropType == -1 ||
-                                    this.props.declarations.some(val=>val.name==this.state.itemPropNewName && val.pclass==PropertyClass.item)}/>
-                        </Input>
-                    </Grid.Column>
-                    <Grid.Column>
-                        <Input onChange={e=>this.setState({resPropNewName:e.currentTarget.value})} value={this.state.resPropNewName} placeholder="New property" action>
-                            <input/>
-                            <Select 
-                                onChange={(e,d)=>this.setState({resPropType:d.value as number})} 
-                                options={makePropertyTypeOptions()} 
-                                value={this.state.resPropType}
-                                placeholder="Select type"/>
-                            <Button 
-                                icon="add"
-                                onClick={()=>this.onAddProp(PropertyClass.resource)}
-                                disabled={
-                                    !this.state.resPropNewName.length ||
-                                    this.state.resPropType == -1 ||
-                                    this.props.declarations.some(val=>val.name==this.state.resPropNewName && val.pclass==PropertyClass.resource)}/>
-                        </Input>
-                    </Grid.Column>
-                    <Grid.Column>
-                        <Input onChange={e=>this.setState({craftPropNewName:e.currentTarget.value})} value={this.state.craftPropNewName} placeholder="New property" action>
-                            <input/>
-                            <Select 
-                                onChange={(e,d)=>this.setState({craftPropType:d.value as number})} 
-                                options={makePropertyTypeOptions()} 
-                                value={this.state.craftPropType}
-                                placeholder="Select type"/>
-                            <Button 
-                                icon="add"
-                                onClick={()=>this.onAddProp(PropertyClass.crafter)}
-                                disabled={
-                                    !this.state.craftPropNewName.length ||
-                                    this.state.craftPropType == -1 ||
-                                    this.props.declarations.some(val=>val.name==this.state.craftPropNewName && val.pclass==PropertyClass.crafter)}/>
-                        </Input>
-                    </Grid.Column>
-                </Grid.Row>
             </Grid>
         )
     }

@@ -1,3 +1,5 @@
+import { isRegExp } from "util";
+
 
 export enum PropertyType{
     boolean,
@@ -18,15 +20,15 @@ declare class Item{}
 declare class Resource{}
 declare class CraftingMethod{}
 
-class PropertyValue {
-    value : PropertyValueType
-    constructor(value : PropertyValueType)
-    {
-        this.value = value
-    }
-}
+// class PropertyValue {
+//     value : PropertyValueType
+//     constructor(value : PropertyValueType)
+//     {
+//         this.value = value
+//     }
+// }
 
-type PropertyValueType = boolean | string | number | Item | Resource | CraftingMethod | Array<PropertyValue>;
+type PropertyValueType = boolean | string | number | Item | Resource | CraftingMethod;
 
 export class BaseProperty{
     name:string
@@ -34,7 +36,7 @@ export class BaseProperty{
     constructor( name:string, value:PropertyValueType)
     {
         this.name = name
-        this.value = new PropertyValue(value)
+        this.value = value//new PropertyValue(value)
     }
 }
 
@@ -42,19 +44,22 @@ export class PropertyDecl{
     pclass:PropertyClass
     name:string
     type:PropertyType
-    constructor(pclass:PropertyClass, name:string, type:PropertyType)
+    isRequired:boolean
+    defaultValue:PropertyValueType
+    constructor(pclass:PropertyClass, name:string, type:PropertyType, isRequired:boolean)
     {
         this.pclass = pclass
         this.name = name
         this.type = type
+        this.isRequired = isRequired
     }
 }
 
 export class PropertiesCollection {
-    array : Array<BaseProperty>;
-    add(prop:BaseProperty)
+    array = new Array<BaseProperty>()
+    add(name:string, value:PropertyValueType)
     {
-        this.array.push(prop);
+        this.array.push(new BaseProperty(name, value));
     }
     removeByName(propName:string)
     {
@@ -68,5 +73,12 @@ export class PropertiesCollection {
             }
         }
         return null;
+    }
+    clone() {
+        let rv = new PropertiesCollection()
+        for(let v of this.array) {
+            rv.add(v.name, v.value)
+        }
+        return rv
     }
 }

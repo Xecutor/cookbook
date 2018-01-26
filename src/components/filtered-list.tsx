@@ -83,7 +83,7 @@ export class FilteredList<T> extends React.Component<FilteredListProps<T>, any> 
         }
 
         let header = [
-            <Grid.Column>
+            <Grid.Column key="h">
                 <Input action={{icon:"delete", onClick:()=>this.setState({filter:""})}} 
                     value={this.state.filter} 
                     onChange={(e)=>this.onFilterChange(e.currentTarget.value)} 
@@ -92,7 +92,7 @@ export class FilteredList<T> extends React.Component<FilteredListProps<T>, any> 
         ]
         if(this.props.content) {
             header.push(
-                <Grid.Column>
+                <Grid.Column  key="h2">
                     this.props.content
                 </Grid.Column>
             )
