@@ -23,7 +23,23 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
     constructor(props:any)
     {
         super(props)
+
+        window.onblur = ()=>this.saveModelToLocalstorage()
+        window.onunload = ()=>this.saveModelToLocalstorage()
+        this.loadModelFromLocalstorage()
+
         this.state=this.model.getStateUpdate()
+    }
+    saveModelToLocalstorage()
+    {
+        localStorage.setItem("cookbook-data", this.model.serialize())
+    }
+    loadModelFromLocalstorage()
+    {
+        let data = localStorage.getItem("cookbook-data")
+        if(data) {
+            this.model.deserialize(data)
+        }
     }
     onAddTag(tag:Tag)
     {
@@ -44,9 +60,10 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
     }
     onUpdateProp(updatedProp:PropertyDecl) {
         for(let prop of this.model.properties.array) {
-            if(prop.name == updatedProp.name && prop.pclass==updatedProp.pclass) {
+            if(prop.name == updatedProp.name && prop.pclass == updatedProp.pclass) {
                 prop.type = updatedProp.type
                 prop.isRequired = updatedProp.isRequired
+                prop.defaultValue = updatedProp.defaultValue
                 this.model.properties.mark()
                 break;
             }

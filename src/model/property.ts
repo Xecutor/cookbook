@@ -1,3 +1,4 @@
+import { Serializable } from './serializable';
 import { isRegExp } from "util";
 
 
@@ -40,18 +41,30 @@ export class BaseProperty{
     }
 }
 
-export class PropertyDecl{
+export class PropertyDecl implements Serializable{
     pclass:PropertyClass
     name:string
     type:PropertyType
     isRequired:boolean
     defaultValue:PropertyValueType
-    constructor(pclass:PropertyClass, name:string, type:PropertyType, isRequired:boolean)
+    constructor(pclass?:PropertyClass, name?:string, type?:PropertyType, isRequired?:boolean)
     {
         this.pclass = pclass
         this.name = name
         this.type = type
         this.isRequired = isRequired
+    }
+    serialize()
+    {
+        return this
+    }
+    deserialize(json:any)
+    {
+        this.pclass = json.pclass
+        this.name = json.name
+        this.type = json.type
+        this.isRequired = json.isRequired
+        this.defaultValue = json.defaultValue
     }
 }
 
@@ -80,5 +93,11 @@ export class PropertiesCollection {
             rv.add(v.name, v.value)
         }
         return rv
+    }
+    deserialize(arr:Array<any>)
+    {
+        for(let item of arr) {
+            this.add(item.name, item.value)
+        }
     }
 }

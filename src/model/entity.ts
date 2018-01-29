@@ -1,11 +1,12 @@
+import { Serializable } from './serializable';
 import { Tags } from './tags';
 import { PropertiesCollection, BaseProperty } from "./property";
 
-export class Entity{
+export class Entity implements Serializable{
     name:string;
-    properties : PropertiesCollection;
-    tags: Tags
-    
+    properties = new PropertiesCollection()
+    tags = new Tags()
+
     isItem()
     {
         return false
@@ -17,5 +18,15 @@ export class Entity{
     isCrafter()
     {
         return false
+    }
+    serialize()
+    {
+        return this
+    }
+    deserialize(obj:any)
+    {
+        this.name = obj.name
+        this.properties.deserialize(obj.properties)
+        this.tags.deserialize(obj.tags)
     }
 }

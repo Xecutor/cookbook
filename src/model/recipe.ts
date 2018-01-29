@@ -1,3 +1,4 @@
+import { Serializable } from './serializable';
 import { Item } from './item';
 import { Resource } from "./resource";
 import { Tag, Tags } from './tags';
@@ -22,8 +23,16 @@ export class Output {
     }
 }
 
-export class Recipe {
+export class Recipe implements Serializable {
     input = new Array<Ingredient>()
     output = new Array<Output>()
     tags = new Tags()
+    serialize()
+    {
+        return this
+    }
+    deserialize(json:any)
+    {
+        //todo
+    }
 }

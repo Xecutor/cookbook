@@ -38,4 +38,13 @@ export class Tags implements Trackable<string>{
     {
         return this.tags.clone()
     }
+    serialize()
+    {
+        return this.tags.serialize()
+    }
+    deserialize(arr:Array<string>) {
+        for(let tag of arr) {
+            this.add(tag)
+        }
+    }
 }

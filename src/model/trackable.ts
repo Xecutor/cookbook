@@ -1,3 +1,6 @@
+import { Serializable } from './serializable';
+import Tab from "semantic-ui-react/dist/commonjs/modules/Tab/Tab";
+
 export interface Trackable<T> {
     modified : boolean
     ack():void
@@ -5,7 +8,7 @@ export interface Trackable<T> {
     clone():Array<T>
 }
 
-export class TrackableArray<T> implements Trackable<T>{
+export class TrackableArray<T extends (Serializable|string)> implements Trackable<T>{
     array = new Array<T>()
     modified = true
     push(val:T)
@@ -38,5 +41,30 @@ export class TrackableArray<T> implements Trackable<T>{
     clone()
     {
         return [...this.array];
+    }
+    serialize()
+    {
+        let result = []
+        for(let item of this.array) {
+            if(typeof item==="string") {
+                result.push(item)
+            }
+            else {
+                result.push((item as Serializable).serialize())
+            }
+        }
+        return result
+    }
+    deserialize(arr:Array<any>, ctor?:{new():T})
+    {
+        for(let obj of arr) {
+            if(ctor) {
+                let item = (new ctor()) as Serializable
+                item.deserialize(obj)
+                this.push(item as T)
+            } else {
+                this.push(obj);
+            }
+        }
     }
 }

@@ -29,23 +29,36 @@ function updateState<T>(name: keyof ModelState, cnt:Trackable<T>,  st:ModelState
 
 export class Model{
     tags = new Tags()
+    properties = new TrackableArray<PropertyDecl>()
     items = new TrackableArray<Item>()
     resources = new TrackableArray<Resource>()
     crafters = new TrackableArray<Crafter>()
-    properties = new TrackableArray<PropertyDecl>()
     craftingMethods = new TrackableArray<CraftingMethod>()
     recipes  = new  TrackableArray<Recipe>()
     getStateUpdate()
     {
         let result : ModelState = {}
         updateState("tags", this.tags, result)
+        updateState("properties", this.properties, result)
         updateState("items", this.items, result)
         updateState("resources", this.resources, result)
         updateState("crafters", this.crafters, result)
-        updateState("properties", this.properties, result)
         updateState("craftingMethods", this.craftingMethods, result)
         updateState("recipes", this.recipes, result)
 
         return result
+    }
+    serialize() {
+        let result : any = {}
+        result.tags = this.tags.serialize()
+        result.properties = this.properties.serialize()
+        return JSON.stringify(result);
+    }
+    deserialize(jsonString:string)
+    {
+        //testfff
+        let json = JSON.parse(jsonString)
+        this.tags.deserialize(json.tags || [])
+        this.properties.deserialize(json.properties || [], PropertyDecl)
     }
 }

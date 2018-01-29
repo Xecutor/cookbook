@@ -66,14 +66,26 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
         this.props.onUpdateProp(updatedProp)
     }
 
+    onPropDefaultValueChange(prop:PropertyDecl, defValue:any)
+    {
+        let updatedProp = new PropertyDecl(prop.pclass, prop.name, prop.type, prop.isRequired)
+        updatedProp.defaultValue = defValue;
+        this.props.onUpdateProp(updatedProp)
+    }
+
     propToComp(prop:PropertyDecl) {
         let options = makePropertyTypeOptions()
         let defaultValue;
-        if(prop.type==PropertyType.boolean) {
-            defaultValue  = <Checkbox fitted checked/>
+        if (prop.type == PropertyType.boolean) {
+            let checked = {}
+            if (prop.defaultValue) {
+                checked = { checked: true }
+            }
+            defaultValue = <Checkbox fitted {...checked} onChange={(e, { checked }) => this.onPropDefaultValueChange(prop, checked)} />
         }
-        else if(prop.type==PropertyType.string) {
-            defaultValue = <Input/>
+        else if (prop.type == PropertyType.string) {
+            let val = prop.defaultValue || "";
+            defaultValue = <Input value={val} onChange={(e, { value }) => this.onPropDefaultValueChange(prop, value)} />
         }
         return (
                 <Label>
