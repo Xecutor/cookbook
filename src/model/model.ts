@@ -52,6 +52,7 @@ export class Model{
         let result : any = {}
         result.tags = this.tags.serialize()
         result.properties = this.properties.serialize()
+        result.items = this.items.serialize()
         return JSON.stringify(result);
     }
     deserialize(jsonString:string)

@@ -70,8 +70,8 @@ export class FilteredList<T> extends React.Component<FilteredListProps<T>, any> 
                     let item = rend ? rend(itemRaw) : itemRaw
                     row.push(
                         <Grid.Column key={`${i}x${j}`}>
-                            {this.props.isButton ? <Button onClick={()=>this.props.onSelect(itemRaw)}>{item}</Button> : item}
-                            {this.props.haveDelete && <Button onClick={()=>this.props.onDelete(itemRaw)} color='red' icon='delete'></Button>}
+                            {this.props.isButton ? <Button onClick={()=>this.props.onSelect && this.props.onSelect(itemRaw)}>{item}</Button> : item}
+                            {this.props.haveDelete && <Button onClick={()=>this.props.onDelete && this.props.onDelete(itemRaw)} color='red' icon='delete'></Button>}
                         </Grid.Column>)
                 }
                 else {

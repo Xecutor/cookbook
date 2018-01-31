@@ -10,15 +10,16 @@ import { TagsPage } from "./tags-page";
 import { Tag } from "../model/tags";
 import { PropertiesPage } from "./properties-page";
 import { PropertyDecl, PropertyClass, PropertyType } from "../model/property";
-import { ItemsPage } from "./items-page";
+import { ItemsPage, ItemHandler } from "./items-page";
 import { Item } from "../model/item";
+import { entityEqByName } from "../model/entity";
 
 require('offline-plugin/runtime').install();
 
 interface CookBookAppState extends ModelState{
 }
 
-export class CookBookApp extends React.Component<any, CookBookAppState> {
+export class CookBookApp extends React.Component<any, CookBookAppState> implements ItemHandler {
     model = new Model()
     constructor(props:any)
     {
@@ -77,6 +78,24 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
     updateStateFromModel() {
         this.setState(this.model.getStateUpdate())
     }
+
+    onAddItem(item:Item) {
+        this.model.items.push(item)
+        this.updateStateFromModel()
+    }
+    onUpdateItem(item:Item) {
+        let upItem = this.model.items.find(item, entityEqByName)
+        upItem.properties = item.properties
+        upItem.tags = item.tags
+        this.model.items.mark()
+        this.updateStateFromModel()
+    }
+
+    onDeleteItem(item:Item) {
+        this.model.items.remove(item, entityEqByName)
+        this.updateStateFromModel()
+    }
+
     render()
     {
         const panes = [
@@ -87,7 +106,12 @@ export class CookBookApp extends React.Component<any, CookBookAppState> {
                                                    onUpdateProp={updProp=>this.onUpdateProp(updProp)}
                                                    onDeleteProp={updProp=>this.onDeleteProp(updProp)}
                                                    />},
-            {menuItem:'Items', render:()=><ItemsPage items={this.state.items} props={this.state.properties.filter(p=>p.pclass==PropertyClass.item)}/>},
+            {menuItem:'Items', render:()=><ItemsPage 
+                                            tags={this.state.tags}
+                                            items={this.state.items} 
+                                            props={this.state.properties.filter(p=>p.pclass==PropertyClass.item)}
+                                            itemHandler={this}
+                                            />},
             {menuItem:'Resources', render:()=><div>resources</div>},
             {menuItem:'Crafting Methods', render:()=><div>cmethods</div>},
             {menuItem:'Recipes', render:()=><div>recipes</div>},
