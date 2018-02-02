@@ -5,6 +5,7 @@ import { isRegExp } from "util";
 export enum PropertyType{
     boolean,
     string,
+    text,
     number,
     item,
     resource,

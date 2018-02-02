@@ -11,9 +11,9 @@ interface TagEditorProps {
 export class TagEditorPopup extends React.Component<TagEditorProps, any> {
     constructor(props:TagEditorProps)
     {
-        super(props);
-        this.state={
-            filter:''
+        super(props)
+        this.state = {
+            filter: ''
         }
     }
 

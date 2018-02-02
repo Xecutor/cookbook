@@ -8,12 +8,19 @@ import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
 import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
 import Select from "semantic-ui-react/dist/commonjs/addons/Select/Select";
 import Checkbox from "semantic-ui-react/dist/commonjs/modules/Checkbox/Checkbox";
+import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
+
+export interface PropertiesHandler {
+    onAddProp(newProp:PropertyDecl):void
+    onUpdateProp(updatedProp:PropertyDecl):void
+    onDeleteProp(deletedProp:PropertyDecl):void
+    onMovePropUp(idx:number):void
+    onMovePropDown(idx:number):void
+}
 
 interface PropertiesPageProps{
     declarations : Array<PropertyDecl>
-    onAddProp:(newProp:PropertyDecl)=>void
-    onUpdateProp:(updatedProp:PropertyDecl)=>void
-    onDeleteProp:(deletedProp:PropertyDecl)=>void
+    handler : PropertiesHandler
 }
 
 interface NewPropInfo{
@@ -58,40 +65,73 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
     }
     onPropTypeChange(prop:PropertyDecl, newType:PropertyType) {
         let updatedProp = new PropertyDecl(prop.pclass, prop.name, newType, prop.isRequired);
-        this.props.onUpdateProp(updatedProp)
+        this.props.handler.onUpdateProp(updatedProp)
     }
 
     onPropReqChange(prop:PropertyDecl, newReq:boolean) {
         let updatedProp = new PropertyDecl(prop.pclass, prop.name, prop.type, newReq)
-        this.props.onUpdateProp(updatedProp)
+        this.props.handler.onUpdateProp(updatedProp)
     }
 
     onPropDefaultValueChange(prop:PropertyDecl, defValue:any)
     {
+        // if(prop.type==PropertyType.number) {
+        //     defValue = defValue.toString().replace(/[^\d.+\-]/,'');
+        //     if(defValue.length===0) {
+        //         defValue = 0;
+        //     }
+        //     else {
+        //         try{
+        //             defValue = parseFloat(defValue);
+        //         }catch(e) {
+        //         }
+        //     }
+        // }
         console.log(`set defValue=${defValue} for prop.name=${prop.name}`)
         let updatedProp = new PropertyDecl(prop.pclass, prop.name, prop.type, prop.isRequired)
         updatedProp.defaultValue = defValue;
-        this.props.onUpdateProp(updatedProp)
+        this.props.handler.onUpdateProp(updatedProp)
     }
 
-    propToComp(prop:PropertyDecl) {
+    onMoveUp(idx:number) {
+        this.props.handler.onMovePropUp(idx)
+    }
+
+    onMoveDown(idx:number) {
+        this.props.handler.onMovePropDown(idx)
+    }
+
+    propToComp(idx:number, prop:PropertyDecl) {
         let options = makePropertyTypeOptions()
         let defaultValue;
         if (prop.type == PropertyType.boolean) {
             console.log(`prop.name=${prop.name}, defaultValue=${prop.defaultValue}`)
             let checked = {}
-            if (prop.defaultValue) {
-                checked = { checked: true }
+            if (prop.defaultValue!==undefined) {
+                checked = { checked: prop.defaultValue }
+            }
+            else {
+                checked = {indeterminate: true}
             }
             defaultValue = <Checkbox fitted {...checked} onChange={(e, { checked }) => this.onPropDefaultValueChange(prop, checked)} />
         }
-        else if (prop.type == PropertyType.string) {
+        else if (prop.type == PropertyType.string || prop.type == PropertyType.text || prop.type==PropertyType.number) {
             console.log(`prop.name=${prop.name}, defaultValue=${prop.defaultValue}`)
             let val = prop.defaultValue || "";
-            defaultValue = <Input value={val} onChange={(e, { value }) => this.onPropDefaultValueChange(prop, value)} />
+            defaultValue = <Input 
+                               icon={{
+                                   name : "remove",
+                                   circular : true,
+                                   link : true,
+                                   onClick:()=>this.onPropDefaultValueChange(prop, undefined)
+                               }}
+                               value={val}
+                               onChange={(e, { value }) => this.onPropDefaultValueChange(prop, value)} />
         }
         return (
                 <Label>
+                    <Button icon="arrow circle up" onClick={()=>this.onMoveUp(idx)}/>
+                    <Button icon="arrow circle down" onClick={()=>this.onMoveDown(idx)}/>
                     {prop.name}&nbsp;:&nbsp;
                     <Dropdown
                         floating options={options} value={prop.type} 
@@ -101,7 +141,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
                         value={prop.isRequired?1:0}
                         onChange={(e,d)=>this.onPropReqChange(prop, !!(d.value as number))}/>
                     {defaultValue}
-                    <Button size="mini" icon="delete" color="red" onClick={()=>this.props.onDeleteProp(prop)}/>
+                    <Button size="mini" icon="delete" color="red" onClick={()=>this.props.handler.onDeleteProp(prop)}/>
                 </Label>
             )
     }
@@ -116,7 +156,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
         stateProp[pclass].req = undefined
         this.setState({newProp:stateProp})
         let newProp = new PropertyDecl(pclass, name, type, isReq);
-        this.props.onAddProp(newProp)
+        this.props.handler.onAddProp(newProp)
     }
 
     onUpdateNewName(idx:number, newName:string) {
@@ -145,7 +185,8 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
 
         let idx = 0;
         for(let prop of this.props.declarations) {
-            rowsArr[prop.pclass].push(<Grid.Column key={`${prop.pclass}x${idx++}`}>{this.propToComp(prop)}</Grid.Column>)
+            rowsArr[prop.pclass].push(<Grid.Column key={`${prop.pclass}x${idx}`}>{this.propToComp(idx, prop)}</Grid.Column>)
+            ++idx
         }
 
         for (let i of [PropertyClass.item, PropertyClass.resource, PropertyClass.crafter]) {

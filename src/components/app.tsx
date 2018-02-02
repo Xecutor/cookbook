@@ -8,18 +8,18 @@ import 'semantic-ui-css/semantic.min.css';
 import { Model, ModelState } from "../model/model";
 import { TagsPage } from "./tags-page";
 import { Tag } from "../model/tags";
-import { PropertiesPage } from "./properties-page";
+import { PropertiesPage, PropertiesHandler } from "./properties-page";
 import { PropertyDecl, PropertyClass, PropertyType } from "../model/property";
 import { ItemsPage, ItemHandler } from "./items-page";
 import { Item } from "../model/item";
 import { entityEqByName } from "../model/entity";
 
-require('offline-plugin/runtime').install();
+//require('offline-plugin/runtime').install();
 
 interface CookBookAppState extends ModelState{
 }
 
-export class CookBookApp extends React.Component<any, CookBookAppState> implements ItemHandler {
+export class CookBookApp extends React.Component<any, CookBookAppState> implements ItemHandler, PropertiesHandler {
     model = new Model()
     constructor(props:any)
     {
@@ -75,6 +75,45 @@ export class CookBookApp extends React.Component<any, CookBookAppState> implemen
         this.model.properties.remove(propToDel, (a,b)=>a.name==b.name && a.pclass==b.pclass);
         this.updateStateFromModel()
     }
+
+    onMovePropUp(idx: number) {
+        let p = this.model.properties;
+        let pclass = p.at(idx).pclass
+        let prevIdx = -1;
+        console.log(`move up idx=${idx}, type=${pclass}`)
+        for (let i = idx - 1; i >= 0; --i) {
+            console.log(`type at ${i} = ${p.at(i).pclass}`)
+            if (p.at(i).pclass == pclass) {
+                console.log(`found at ${i}`)
+                prevIdx = i;
+                break;
+            }
+        }
+        if (prevIdx != -1) {
+            p.swap(idx, prevIdx)
+            this.updateStateFromModel()
+        }
+    }
+
+    onMovePropDown(idx: number) {
+        let p = this.model.properties;
+        let pclass = p.at(idx).pclass
+        let nextIdx = -1;
+        console.log(`move down idx=${idx}, type=${pclass}`)
+        for (let i = idx + 1; i < p.size(); ++i) {
+            console.log(`type at ${i} = ${p.at(i).type}`)
+            if (p.at(i).pclass == pclass) {
+                console.log(`found at ${i}`)
+                nextIdx = i;
+                break;
+            }
+        }
+        if (nextIdx != -1) {
+            p.swap(idx, nextIdx)
+            this.updateStateFromModel()
+        }
+    }
+
     updateStateFromModel() {
         this.setState(this.model.getStateUpdate())
     }
@@ -102,9 +141,7 @@ export class CookBookApp extends React.Component<any, CookBookAppState> implemen
             {menuItem:'Tags', render:()=><TagsPage tags={this.state.tags} onAddTag={(tag)=>this.onAddTag(tag)} onDelTag={tag=>this.onDelTag(tag)}/>},
             {menuItem:'Properties', render:()=><PropertiesPage 
                                                    declarations={this.state.properties} 
-                                                   onAddProp={newProp=>this.onAddProp(newProp)}
-                                                   onUpdateProp={updProp=>this.onUpdateProp(updProp)}
-                                                   onDeleteProp={updProp=>this.onDeleteProp(updProp)}
+                                                   handler={this}
                                                    />},
             {menuItem:'Items', render:()=><ItemsPage 
                                             tags={this.state.tags}

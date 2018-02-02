@@ -53,13 +53,16 @@ export class Model{
         result.tags = this.tags.serialize()
         result.properties = this.properties.serialize()
         result.items = this.items.serialize()
-        return JSON.stringify(result);
+        let resultStr = JSON.stringify(result);
+        console.log("saving:", resultStr);
+        return resultStr;
     }
     deserialize(jsonString:string)
     {
-        //testfff
+        console.log("loading:", jsonString);
         let json = JSON.parse(jsonString)
         this.tags.deserialize(json.tags || [])
         this.properties.deserialize(json.properties || [], PropertyDecl)
+        this.items.deserialize(json.items || [], Item);
     }
 }

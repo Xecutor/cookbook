@@ -38,9 +38,28 @@ export class TrackableArray<T extends (Serializable|string)> implements Trackabl
     {
         this.modified = false
     }
+
     clone()
     {
         return [...this.array];
+    }
+
+    at(idx: number)
+    {
+        return this.array[idx]
+    }
+
+    size()
+    {
+        return this.array.length
+    }
+
+    swap(idx1:number, idx2:number)
+    {
+        let tmp = this.array[idx1]
+        this.array[idx1] = this.array[idx2]
+        this.array[idx2] = tmp
+        this.modified = true
     }
     serialize()
     {

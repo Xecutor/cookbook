@@ -45,7 +45,7 @@ export class Entity implements Serializable{
     {
         return {
             name:this.name,
-            properties:this.properties,
+            properties:this.properties.array,
             tags:this.tags.serialize()
         }
     }

@@ -1,5 +1,5 @@
 var webpack = require('webpack');
-var OfflinePlugin = require('offline-plugin')
+//var OfflinePlugin = require('offline-plugin')
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var path = require('path');
 
@@ -73,9 +73,9 @@ module.exports = {
                 comments: false,
             },
         }),
-        new OfflinePlugin({
-          ServiceWorker: {
-          output: 'sw.js'
-        }})
+//        new OfflinePlugin({
+//          ServiceWorker: {
+//          output: 'sw.js'
+//        }})
     ]
 };

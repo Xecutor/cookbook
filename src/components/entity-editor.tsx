@@ -28,6 +28,7 @@ interface EntityEditorState{
     props:PropertiesCollection
     tags:Tags
     update:boolean
+    cancel:boolean
     extra:any
 }
 
@@ -42,6 +43,7 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
         let state : EntityEditorState = {
             name:'',
             update:false,
+            cancel:false,
             props:new PropertiesCollection(),
             tags:new Tags,
             extra:undefined
@@ -56,24 +58,39 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
 
     onSubmitForm() {
         console.log(`name=${this.state.name}`)
-        for(let p of this.state.props.array) {
+        for (let p of this.state.props.array) {
             console.log(`${p.name} = ${p.value}`)
         }
-        if (this.state.update) {
-            this.props.entityHandler.onUpdateEntity(this.state.name, this.state.props, this.state.tags, this.state.extra);
-        } else {
-            this.props.entityHandler.onAddEntity(this.state.name, this.state.props, this.state.tags, this.state.extra);
+        if (!this.state.cancel) {
+            if (this.state.update) {
+                this.props.entityHandler.onUpdateEntity(this.state.name, this.state.props, this.state.tags, this.state.extra);
+            } else {
+                this.props.entityHandler.onAddEntity(this.state.name, this.state.props, this.state.tags, this.state.extra);
+            }
         }
         this.setState(this.makeDefaultState())
     }
 
-    onFormFieldUpdate(name:string, value:string|number|boolean) {
+    onFormFieldUpdate(propDecl:PropertyDecl, value:string|number|boolean) {
+        let name = propDecl.name;
+        // if(propDecl.type==PropertyType.number) {
+        //     let oldVal = value;
+        //     value = value.toString().replace(/[^\d.+-]/, '')
+        //     try{
+        //         value = parseFloat(value)
+        //     }catch(e) {
+        //     }
+        //     console.log(`oldval=${oldVal}, fixed val:${value}`)
+        // }
+
         let updatedProps = this.state.props.clone()
         let prop = updatedProps.findByName(name)
         if(prop) {
+            console.log(`upddate prop ${name}`)
             prop.value = value;
         }
         else {
+            console.log(`add prop ${name}`)
             updatedProps.add(name, value)
         }
         this.setState({props:updatedProps})
@@ -110,47 +127,120 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
         })
     }
 
+    makePropControl(prop:PropertyDecl)
+    {
+        let propVal = this.state.props.findByName(prop.name)
+        if (prop.type == PropertyType.boolean) {
+            let cbValue: { [key: string]: boolean } = {}
+            if (propVal) {
+                cbValue["checked"] = !!propVal.value
+            }
+            else {
+                cbValue["indeterminate"] = true
+                if(prop.isRequired) {
+                    cbValue["error"] = true
+                }
+            }
+            return <Form.Checkbox key={prop.name} {...cbValue} label={prop.name} onChange={(e, { checked }) => this.onFormFieldUpdate(prop, checked)} />;
+        }
+        else if (prop.type == PropertyType.string || prop.type == PropertyType.number) {
+            let inValue: { [key: string]: string | boolean } = {}
+            if (propVal) {
+                inValue["value"] = typeof (propVal.value) === "string" ? propVal.value as string : propVal.value.toString()
+                if(prop.type == PropertyType.number) {
+                    try{
+                        if(isNaN(parseFloat(propVal.value as string))) {
+                            console.log("parse error?")
+                            inValue["error"] = true
+                        }
+                    }catch(e) {
+                        console.log("parse error?")
+                        inValue["error"] = true
+                    }
+                }
+            }
+            else {
+                inValue["value"] = ""
+                if(prop.isRequired) {
+                    inValue["error"] = true
+                }
+            }
+            return <Form.Input key={prop.name} {...inValue} label={prop.name} onChange={(e, { value }) => this.onFormFieldUpdate(prop, value)} />
+        }
+        else if (prop.type == PropertyType.text) {
+            let inValue: { [key: string]: string | boolean } = {}
+            if (propVal) {
+                inValue["value"] = propVal.value as string
+            }
+            else {
+                inValue["value"] = ""
+                if(prop.isRequired) {
+                    inValue["error"] = true
+                }
+            }
+            return <Form.TextArea key={prop.name} {...inValue} label={prop.name} onChange={(e, { value }) => this.onFormFieldUpdate(prop, value)} />
+        }
+        return <Form.Field key={prop.name} label={prop.name}><Label>TODO</Label></Form.Field>
+    }
+
+    validateName() {
+        return this.state.update || (this.state.name.length != 0 && !this.props.entities.find(e => e.name == this.state.name))
+    }
+
+    validateProps() {
+        for(let prop of this.props.props) {
+            if(prop.isRequired) {
+                if(!this.state.props.findByName(prop.name)) {
+                    console.log(`prop validation failed, required prop ${prop.name} not defined`)
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
     render() {
         let itemForm=[]
-        let disableName :{[key:string]:boolean}= {}
+        let nameOpts :{[key:string]:boolean}= {}
         if (this.state.update) {
-            disableName["disabled"] = true
+            nameOpts["disabled"] = true
+        }
+        else {
+            if(!this.state.name.length) {
+                nameOpts["error"] = this.validateName()
+            }
         }
         itemForm.push(<Form.Input 
+                        key="item-name"
                         label="Name" 
                         placeholder="Name"
                         value={this.state.name}
-                        {...disableName}
+                        {...nameOpts}
                         onChange={(e,{value})=>this.onFormNameUpdate(value)}>
                       </Form.Input>)
         for(let prop of this.props.props) {
-            let propVal = this.state.props.findByName(prop.name)
-            if(prop.type==PropertyType.boolean) {
-                let cbValue : {[key:string] : boolean} = {}
-                if(propVal && propVal.value) {
-                    cbValue["checked"] = true
-                }
-                itemForm.push(<Form.Checkbox {...cbValue} label={prop.name} onChange={(e,{checked})=>this.onFormFieldUpdate(prop.name, checked)}/>)
-            }
-            else if(prop.type==PropertyType.string) {
-                let inValue : {[key:string] : string} = {}
-                if(propVal) {
-                    inValue["value"] = propVal.value as string
-                }
-                itemForm.push(<Form.Input {...inValue} label={prop.name} onChange={(e,{value})=>this.onFormFieldUpdate(prop.name, value)}/>)
-            }
+            itemForm.push(this.makePropControl(prop))
         }
         let tags=[]
         for(let tag of this.state.tags.tags.array) {
             tags.push(<Label key={tag}>{tag}</Label>)
         }
         tags.push(<TagEditorPopup key="tageditor" tags={this.props.tags} onAddTag={(tag)=>this.onAddTag(tag)}/>)
-        itemForm.push(<Form.Field>{tags}</Form.Field>)
-        let disableAdd : FormButtonProps = {};
-        if (!this.state.update && (this.state.name.length == 0 || this.props.entities.find(e => e.name == this.state.name))) {
-            disableAdd["disabled"] = true
+        itemForm.push(<Form.Field key="item-tags">{tags}</Form.Field>)
+        if(this.state.update) {
+            itemForm.push(
+                <Form.Group key="item-update-buttons">
+                    <Form.Button>Update</Form.Button>
+                    <Form.Button onClick={()=>this.setState({cancel:true})}>Cancel</Form.Button>
+                </Form.Group>)
         }
-        itemForm.push(<Form.Button {...disableAdd}>{this.state.update?"Update":"Add"}</Form.Button>)
+        else {
+            let disableAdd : FormButtonProps = {};
+            if (!this.validateName() || !this.validateProps()) {
+                disableAdd["disabled"] = true
+            }
+            itemForm.push(<Form.Button key="item-add-button" {...disableAdd}>Add</Form.Button>)
+        }
         return (
             <div>
                 <Grid centered columns={3}>
