@@ -3,12 +3,10 @@ import { Entity } from "./entity";
 import { PropertiesCollection } from "./property";
 
 export class Item extends Entity {
-    constructor(name:string = "", properties: PropertiesCollection = new PropertiesCollection, tags:Tags = new Tags) 
-    {
+    constructor(name: string = "", properties: PropertiesCollection = new PropertiesCollection, tags: Tags = new Tags) {
         super(name, properties, tags)
     }
-    isItem()
-    {
-        return true;
+    getType() {
+        return "Item"
     }
 }

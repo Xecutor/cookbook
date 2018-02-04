@@ -9,39 +9,41 @@ import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
 import Select from "semantic-ui-react/dist/commonjs/addons/Select/Select";
 import Checkbox from "semantic-ui-react/dist/commonjs/modules/Checkbox/Checkbox";
 import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
+import { Item } from "../model/item";
+import { NamedPicker } from "./named-picker";
 
 export interface PropertiesHandler {
-    onAddProp(newProp:PropertyDecl):void
-    onUpdateProp(updatedProp:PropertyDecl):void
-    onDeleteProp(deletedProp:PropertyDecl):void
-    onMovePropUp(idx:number):void
-    onMovePropDown(idx:number):void
+    onAddProp(newProp: PropertyDecl): void
+    onUpdateProp(updatedProp: PropertyDecl): void
+    onDeleteProp(deletedProp: PropertyDecl): void
+    onMovePropUp(idx: number): void
+    onMovePropDown(idx: number): void
 }
 
-interface PropertiesPageProps{
-    declarations : Array<PropertyDecl>
-    handler : PropertiesHandler
+interface PropertiesPageProps {
+    declarations: Array<PropertyDecl>
+    items:Array<Item>
+    handler: PropertiesHandler
 }
 
-interface NewPropInfo{
-    name:string
-    type:number
-    req:boolean
+interface NewPropInfo {
+    name: string
+    type: number
+    req: boolean
 }
 
-interface PropertiesPageState{
-    newProp:Array<NewPropInfo>
+interface PropertiesPageState {
+    newProp: Array<NewPropInfo>
 }
 
-function makePropertyTypeOptions()
-{
+function makePropertyTypeOptions() {
     let options = []
-    for(let t in PropertyType) {
+    for (let t in PropertyType) {
         let v = PropertyType[t]
-        if(typeof v === "number") {
+        if (typeof v === "number") {
             options.push({
-                text:t,
-                value:v,
+                text: t,
+                value: v,
             })
         }
     }
@@ -49,32 +51,31 @@ function makePropertyTypeOptions()
 }
 
 export class PropertiesPage extends React.Component<PropertiesPageProps, PropertiesPageState> {
-    constructor(prop:PropertiesPageProps) {
+    constructor(prop: PropertiesPageProps) {
         super(prop)
         let newProp = []
-        for(let i=0;i<3;++i) {
+        for (let i = 0; i < 3; ++i) {
             newProp.push({
-                name:'',
-                type:-1,
-                req:undefined
+                name: '',
+                type: -1,
+                req: undefined
             })
         }
         this.state = {
-            newProp:newProp
+            newProp: newProp
         }
     }
-    onPropTypeChange(prop:PropertyDecl, newType:PropertyType) {
+    onPropTypeChange(prop: PropertyDecl, newType: PropertyType) {
         let updatedProp = new PropertyDecl(prop.pclass, prop.name, newType, prop.isRequired);
         this.props.handler.onUpdateProp(updatedProp)
     }
 
-    onPropReqChange(prop:PropertyDecl, newReq:boolean) {
+    onPropReqChange(prop: PropertyDecl, newReq: boolean) {
         let updatedProp = new PropertyDecl(prop.pclass, prop.name, prop.type, newReq)
         this.props.handler.onUpdateProp(updatedProp)
     }
 
-    onPropDefaultValueChange(prop:PropertyDecl, defValue:any)
-    {
+    onPropDefaultValueChange(prop: PropertyDecl, defValue: any) {
         // if(prop.type==PropertyType.number) {
         //     defValue = defValue.toString().replace(/[^\d.+\-]/,'');
         //     if(defValue.length===0) {
@@ -93,114 +94,123 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
         this.props.handler.onUpdateProp(updatedProp)
     }
 
-    onMoveUp(idx:number) {
+    onMoveUp(idx: number) {
         this.props.handler.onMovePropUp(idx)
     }
 
-    onMoveDown(idx:number) {
+    onMoveDown(idx: number) {
         this.props.handler.onMovePropDown(idx)
     }
 
-    propToComp(idx:number, prop:PropertyDecl) {
+    propToComp(idx: number, prop: PropertyDecl) {
         let options = makePropertyTypeOptions()
         let defaultValue;
         if (prop.type == PropertyType.boolean) {
             console.log(`prop.name=${prop.name}, defaultValue=${prop.defaultValue}`)
             let checked = {}
-            if (prop.defaultValue!==undefined) {
+            if (prop.defaultValue !== undefined) {
                 checked = { checked: prop.defaultValue }
             }
             else {
-                checked = {indeterminate: true}
+                checked = { indeterminate: true }
             }
             defaultValue = <Checkbox fitted {...checked} onChange={(e, { checked }) => this.onPropDefaultValueChange(prop, checked)} />
         }
-        else if (prop.type == PropertyType.string || prop.type == PropertyType.text || prop.type==PropertyType.number) {
+        else if (prop.type == PropertyType.string || prop.type == PropertyType.text || prop.type == PropertyType.number) {
             console.log(`prop.name=${prop.name}, defaultValue=${prop.defaultValue}`)
             let val = prop.defaultValue || "";
-            defaultValue = <Input 
-                               icon={{
-                                   name : "remove",
-                                   circular : true,
-                                   link : true,
-                                   onClick:()=>this.onPropDefaultValueChange(prop, undefined)
-                               }}
-                               value={val}
-                               onChange={(e, { value }) => this.onPropDefaultValueChange(prop, value)} />
+            defaultValue = <Input
+                icon={{
+                    name: "remove",
+                    circular: true,
+                    link: true,
+                    onClick: () => this.onPropDefaultValueChange(prop, undefined)
+                }}
+                value={val}
+                onChange={(e, { value }) => this.onPropDefaultValueChange(prop, value)} />
+        }
+        else if(prop.type == PropertyType.item) {
+            let val = prop.defaultValue;
+            if(val) {
+                defaultValue=<Label>{val}<Icon name="delete" circular inverted color="red" onClick={()=>this.onPropDefaultValueChange(prop, undefined)}/></Label>
+            }
+            else {
+                defaultValue=<NamedPicker iconProps={{name:"search", circular:true}} values={this.props.items} onSelect={(item:Item)=>this.onPropDefaultValueChange(prop, item.name)}/>
+            }
         }
         return (
-                <Label>
-                    <Button icon="arrow circle up" onClick={()=>this.onMoveUp(idx)}/>
-                    <Button icon="arrow circle down" onClick={()=>this.onMoveDown(idx)}/>
-                    {prop.name}&nbsp;:&nbsp;
+            <Label size="small">
+                <Button size="mini" icon="arrow circle up" onClick={() => this.onMoveUp(idx)} />
+                <Button size="mini" icon="arrow circle down" onClick={() => this.onMoveDown(idx)} />
+                {prop.name}&nbsp;:&nbsp;
                     <Dropdown
-                        floating options={options} value={prop.type} 
-                        onChange={(e,d)=>this.onPropTypeChange(prop, d.value as number)}/>
-                    <Dropdown
-                        floating options={[{text:"req", value:1}, {text:"opt", value:0}]}
-                        value={prop.isRequired?1:0}
-                        onChange={(e,d)=>this.onPropReqChange(prop, !!(d.value as number))}/>
-                    {defaultValue}
-                    <Button size="mini" icon="delete" color="red" onClick={()=>this.props.handler.onDeleteProp(prop)}/>
-                </Label>
-            )
+                    floating options={options} value={prop.type}
+                    onChange={(e, d) => this.onPropTypeChange(prop, d.value as number)} />
+                <Dropdown
+                    floating options={[{ text: "req", value: 1 }, { text: "opt", value: 0 }]}
+                    value={prop.isRequired ? 1 : 0}
+                    onChange={(e, d) => this.onPropReqChange(prop, !!(d.value as number))} />
+                {defaultValue}
+                <Button size="mini" icon="delete" color="red" onClick={() => this.props.handler.onDeleteProp(prop)} />
+            </Label>
+        )
     }
 
-    onAddProp(pclass:PropertyClass) {
+    onAddProp(pclass: PropertyClass) {
         let name = this.state.newProp[pclass].name
         let type = this.state.newProp[pclass].type
         let isReq = this.state.newProp[pclass].req
         let stateProp = [...this.state.newProp]
-        stateProp[pclass].name=''
+        stateProp[pclass].name = ''
         stateProp[pclass].type = -1
         stateProp[pclass].req = undefined
-        this.setState({newProp:stateProp})
+        this.setState({ newProp: stateProp })
         let newProp = new PropertyDecl(pclass, name, type, isReq);
         this.props.handler.onAddProp(newProp)
     }
 
-    onUpdateNewName(idx:number, newName:string) {
+    onUpdateNewName(idx: number, newName: string) {
         let stateProp = [...this.state.newProp]
         stateProp[idx].name = newName
-        this.setState({newProp:stateProp})
+        this.setState({ newProp: stateProp })
     }
 
-    onUpdateNewType(idx:number, newType:number) {
+    onUpdateNewType(idx: number, newType: number) {
         let stateProp = [...this.state.newProp]
         stateProp[idx].type = newType
-        this.setState({newProp:stateProp})
+        this.setState({ newProp: stateProp })
     }
 
-    onUpdateNewReq(idx:number, newReq:number) {
+    onUpdateNewReq(idx: number, newReq: number) {
         let stateProp = [...this.state.newProp]
         stateProp[idx].req = !!newReq
-        this.setState({newProp:stateProp})
+        this.setState({ newProp: stateProp })
     }
 
     render() {
-        let itemCols : Array<JSX.Element> = [];
-        let resCols : Array<JSX.Element> = [];
-        let craftCols : Array<JSX.Element> = [];
-        let rowsArr=[itemCols, resCols, craftCols]
+        let itemCols: Array<JSX.Element> = [];
+        let resCols: Array<JSX.Element> = [];
+        let craftCols: Array<JSX.Element> = [];
+        let rowsArr = [itemCols, resCols, craftCols]
 
         let idx = 0;
-        for(let prop of this.props.declarations) {
+        for (let prop of this.props.declarations) {
             rowsArr[prop.pclass].push(<Grid.Column key={`${prop.pclass}x${idx}`}>{this.propToComp(idx, prop)}</Grid.Column>)
             ++idx
         }
 
         for (let i of [PropertyClass.item, PropertyClass.resource, PropertyClass.crafter]) {
-            let reqValue : {[key:string]:number} = {}
-            if(typeof this.state.newProp[i].req === "boolean") {
+            let reqValue: { [key: string]: number } = {}
+            if (typeof this.state.newProp[i].req === "boolean") {
                 reqValue["value"] = this.state.newProp[i].req ? 1 : 0
             }
-            let typeValue : {[key:string]:number} = {}
+            let typeValue: { [key: string]: number } = {}
             if (this.state.newProp[i].type != -1) {
                 typeValue["value"] = this.state.newProp[i].type
             }
             rowsArr[i].push(
                 <Grid.Column key={`f${i}`}>
-                    <Input onChange={e => this.onUpdateNewName(i, e.currentTarget.value)} value={this.state.newProp[i].name} placeholder="New property" action>
+                    <Input size="mini" onChange={e => this.onUpdateNewName(i, e.currentTarget.value)} value={this.state.newProp[i].name} placeholder="New property" action>
                         <input />
                         <Select
                             onChange={(e, d) => this.onUpdateNewType(i, d.value as number)}
@@ -209,7 +219,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
                             placeholder="Select type" />
                         <Select
                             onChange={(e, d) => this.onUpdateNewReq(i, d.value as number)}
-                            options={[{text:"req",value:1}, {"text":"opt",value:0}]}
+                            options={[{ text: "req", value: 1 }, { "text": "opt", value: 0 }]}
                             {...reqValue}
                             placeholder="Required or optional"
                         />
@@ -225,7 +235,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
                 </Grid.Column>)
         }
 
-        let rows=[]
+        let rows = []
         let maxCol = 0;
         for (let a of rowsArr) {
             if (a.length > maxCol) {
@@ -234,7 +244,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
         }
         for (let idx = 0; idx < maxCol; ++idx) {
             let row = []
-            let i=0
+            let i = 0
             for (let a of rowsArr) {
                 if (idx < a.length) {
                     row.push(a[idx])

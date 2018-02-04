@@ -6,42 +6,39 @@ import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
 import List from "semantic-ui-react/dist/commonjs/elements/List/List";
 import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
 
-interface FilteredListProps<T>{
-    list:Array<T>
-    renderItem?:((val:T)=>string)|((val:T)=>JSX.Element)
-    filter:(val:T,filterText:string)=>boolean
-    haveDelete? : boolean
-    isButton? : boolean
-    columns?:GridProps["columns"]
-    onDelete?:(val:T)=>void
-    onSelect?:(val:T)=>void
-    content?:JSX.Element
+interface FilteredListProps<T> {
+    list: Array<T>
+    renderItem?: ((val: T) => string) | ((val: T) => JSX.Element)
+    filter: (val: T, filterText: string) => boolean
+    haveDelete?: boolean
+    isButton?: boolean
+    columns?: GridProps["columns"]
+    onDelete?: (val: T) => void
+    onSelect?: (val: T) => void
+    content?: JSX.Element
 }
 
-interface FilteredListState{
-    filter:string;
+interface FilteredListState {
+    filter: string;
 }
 
-export function simpleStringFilter(val:string, filterText:string)
-{
+export function simpleStringFilter(val: string, filterText: string) {
     return val.indexOf(filterText) >= 0
 }
 
 export class FilteredList<T> extends React.Component<FilteredListProps<T>, any> {
-    constructor(props:FilteredListProps<T>)
-    {
+    constructor(props: FilteredListProps<T>) {
         super(props)
-        this.state={
-            filter:''
+        this.state = {
+            filter: ''
         }
     }
 
-    onFilterChange(newFilter:string)
-    {
-        this.setState({filter:newFilter})
+    onFilterChange(newFilter: string) {
+        this.setState({ filter: newFilter })
     }
 
-    render(){
+    render() {
         let colCount = 1;
         if (this.props.columns) {
             if (typeof this.props.columns === 'string') {
@@ -52,26 +49,26 @@ export class FilteredList<T> extends React.Component<FilteredListProps<T>, any> 
             }
         }
 
-        let filteredList = this.props.list.filter(v=>this.props.filter(v,this.state.filter))
+        let filteredList = this.props.list.filter(v => this.props.filter(v, this.state.filter))
 
         let rowCount = (filteredList.length / colCount) | 0;
         if (filteredList.length % colCount) {
             ++rowCount;
         }
 
-        let rows=[]
+        let rows = []
         let idx = 0
         let rend = this.props.renderItem
-        for(let i=0;i<rowCount;++i) {
+        for (let i = 0; i < rowCount; ++i) {
             let row = [];
-            for(let j=0;j<colCount;++j) {
-                if(idx<filteredList.length) {
+            for (let j = 0; j < colCount; ++j) {
+                if (idx < filteredList.length) {
                     let itemRaw = filteredList[idx]
                     let item = rend ? rend(itemRaw) : itemRaw
                     row.push(
                         <Grid.Column key={`${i}x${j}`}>
-                            {this.props.isButton ? <Button onClick={()=>this.props.onSelect && this.props.onSelect(itemRaw)}>{item}</Button> : item}
-                            {this.props.haveDelete && <Button onClick={()=>this.props.onDelete && this.props.onDelete(itemRaw)} color='red' icon='delete'></Button>}
+                            {this.props.isButton ? <Button onClick={() => this.props.onSelect && this.props.onSelect(itemRaw)}>{item}</Button> : item}
+                            {this.props.haveDelete && <Button onClick={() => this.props.onDelete && this.props.onDelete(itemRaw)} color='red' icon='delete'></Button>}
                         </Grid.Column>)
                 }
                 else {
@@ -84,15 +81,15 @@ export class FilteredList<T> extends React.Component<FilteredListProps<T>, any> 
 
         let header = [
             <Grid.Column key="h">
-                <Input action={{icon:"delete", onClick:()=>this.setState({filter:""})}} 
-                    value={this.state.filter} 
-                    onChange={(e)=>this.onFilterChange(e.currentTarget.value)} 
-                    placeholder="Search..."/>
+                <Input action={{ icon: "delete", onClick: () => this.setState({ filter: "" }) }}
+                    value={this.state.filter}
+                    onChange={(e) => this.onFilterChange(e.currentTarget.value)}
+                    placeholder="Search..." />
             </Grid.Column>
         ]
-        if(this.props.content) {
+        if (this.props.content) {
             header.push(
-                <Grid.Column  key="h2">
+                <Grid.Column key="h2">
                     this.props.content
                 </Grid.Column>
             )
@@ -106,5 +103,5 @@ export class FilteredList<T> extends React.Component<FilteredListProps<T>, any> 
                 {rows}
             </Grid>
         )
-}
+    }
 }

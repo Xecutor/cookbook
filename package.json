@@ -8,6 +8,7 @@
     "@types/react-dom": "^16.0.3",
     "css-loader": "^0.28.7",
     "file-loader": "^1.1.6",
+    "offline-plugin": "^4.9.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "semantic-ui-css": "^2.2.12",
