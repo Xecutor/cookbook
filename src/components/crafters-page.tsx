@@ -13,6 +13,7 @@ import { TrackableArray } from "../model/trackable";
 import Dropdown from "semantic-ui-react/dist/commonjs/modules/Dropdown/Dropdown";
 import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
 import { ModelState } from "../model/model";
+import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
 
 export interface CrafterHandler {
     onAddCrafter(item: Crafter): void
@@ -104,7 +105,17 @@ export class CraftersPage extends React.Component<CraftersPageProps, CraftersPag
     }
     render() {
         let labels = this.state.craftingMethods.map(cm=>this.createCraftingMethod(cm))
-        let xtra=<span>{labels}<NamedPicker iconProps={{bordered:true}} values={this.props.model.craftingMethods} onSelect={cm=>this.onAddCraftingMethod(cm as CraftingMethod)}/></span>
+        let cmError : {[key:string]:boolean} = {}
+        let iconProps : {[key:string]:boolean | string} = { bordered : true}
+        if(!this.state.craftingMethods.length) {
+            cmError["error"] = true
+            iconProps["color"] = "red"
+        }
+        let xtra=<span key="picker">
+            <Form.Field {...cmError} key="crafting-methods" label="Crafting methods"/>
+            {labels}
+            <NamedPicker key="cm-picker" iconProps={iconProps} values={this.props.model.craftingMethods} onSelect={cm=>this.onAddCraftingMethod(cm as CraftingMethod)}/>
+        </span>
         return <EntityEditor
             model={this.props.model}
             entities={this.props.model.crafters}

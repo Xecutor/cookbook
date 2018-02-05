@@ -87,17 +87,18 @@ export class CraftingMethodsPage extends React.Component<CraftingMethodsPageProp
     }
     render() {
         let cmForm = []
-        cmForm.push(<Form.Input label="Name" value={this.state.name} onChange={(e, { value }) => this.onNameChanged(value)} />)
-        cmForm.push(<Form.Input label="Max level" value={this.state.maxLevel} onChange={(e, { value }) => this.onMaxLevelChanged(value)} />)
+        cmForm.push(<Form.Input key="name" label="Name" value={this.state.name} onChange={(e, { value }) => this.onNameChanged(value)} />)
+        cmForm.push(<Form.Input key="max-level" label="Max level" value={this.state.maxLevel} onChange={(e, { value }) => this.onMaxLevelChanged(value)} />)
+        cmForm.push(<Form.Field key="tags-label" label="Tags"/>)
         cmForm.push(
-            <Form.Field>
+            <Form.Field key="tags">
                 <TagEditor tags={this.state.tags} allTags={this.props.tags} onAddTag={tag=>this.onAddTag(tag)} onRemoveTag={tag=>this.onRemoveTag(tag)}/>
             </Form.Field>)
         if (this.state.formState == FormState.new) {
-            cmForm.push(<Form.Button>Add</Form.Button>)
+            cmForm.push(<Form.Button key="add-button">Add</Form.Button>)
         }
         else {
-            cmForm.push(<Form.Group>
+            cmForm.push(<Form.Group key="update-cancel-buttons">
                 <Form.Button>Update</Form.Button>
                 <Form.Button onClick={() => this.setState(this.makeClearState())}>Cancel</Form.Button>
             </Form.Group>)
@@ -116,6 +117,7 @@ export class CraftingMethodsPage extends React.Component<CraftingMethodsPageProp
                     </Grid.Row>
                 </Grid>
                 <FilteredList
+                    key="f-list"
                     list={this.props.craftingMethods}
                     filter={nameAndTagsDefaultFilter}
                     renderItem={(cm: CraftingMethod) => cm.name}

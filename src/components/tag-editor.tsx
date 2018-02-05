@@ -33,6 +33,7 @@ export class TagEditor extends React.Component<TagEditorProps, TagEditorState> {
         let rv = this.props.tags.array.map(tag=><Label tag key={tag}>{tag}<Icon size="mini" circular name="delete" color="red" inverted onClick={()=>this.props.onRemoveTag(tag)}/></Label>)
         rv.push(
             <Popup
+                key="tags-popup"
                 trigger={<Icon circular bordered name='add' />}
                 hoverable
                 position={'bottom left'}

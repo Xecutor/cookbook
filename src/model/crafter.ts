@@ -3,6 +3,7 @@ import { Item } from './item';
 
 export class Crafter extends Item {
     craftingMethods = new Array<CraftingMethod>()
+    
     isCrafter() {
         return true
     }

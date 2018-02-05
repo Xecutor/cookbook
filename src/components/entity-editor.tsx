@@ -297,12 +297,13 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
         for (let prop of this.props.props) {
             entityForm.push(this.makePropControl(prop))
         }
+        entityForm.push(<Form.Field key="item-tags-label" label="Tags"/>)
         entityForm.push(
             <Form.Field key="item-tags">
                 <TagEditor key="tags-editor" tags={this.state.tags} allTags={this.props.model.tags} onAddTag={(tag)=>this.onAddTag(tag)} onRemoveTag={(tag)=>this.onRemoveTag(tag)}/>
             </Form.Field>)
         if (this.props.extraForm) {
-            entityForm.push(<Form.Field>{this.props.extraForm}</Form.Field>)
+            entityForm.push(<Form.Field key="extra">{this.props.extraForm}</Form.Field>)
         }
         if (this.state.update) {
             entityForm.push(
