@@ -19,6 +19,8 @@ import { ResourceHandler, ResourcesPage } from "./resources-page";
 import { Resource } from "../model/resource";
 import { CraftersPage, CrafterHandler } from "./crafters-page";
 import { Crafter } from "../model/crafter";
+import { RecipesPage, RecipeHandler } from "./recipes-page";
+import { Recipe } from "../model/recipe";
 
 //require('offline-plugin/runtime').install();
 
@@ -27,7 +29,7 @@ interface CookBookAppState extends ModelState {
 
 export class CookBookApp extends React.Component<any, CookBookAppState>
     implements ItemHandler, PropertiesHandler, CraftingMethodsHandler,
-    ResourceHandler, CrafterHandler {
+    ResourceHandler, CrafterHandler, RecipeHandler {
     model = new Model()
     constructor(props: any) {
         super(props)
@@ -195,6 +197,18 @@ export class CookBookApp extends React.Component<any, CookBookAppState>
         this.updateStateFromModel()
     }
 
+    onAddRecipe(recipe:Recipe) {
+
+    }
+
+    onUpdateRecipe(recipe:Recipe) {
+
+    }
+
+    onDeleteRecipe(recipe:Recipe) {
+        
+    }
+
     render() {
         const panes = [
             { 
@@ -241,7 +255,13 @@ export class CookBookApp extends React.Component<any, CookBookAppState>
                     crafterHandler={this}
                 />
             },
-            { menuItem: 'Recipes', render: () => <div>recipes</div> },
+            { 
+                menuItem: 'Recipes', 
+                render: () => <RecipesPage
+                    model={this.state}
+                    handler={this}
+                />
+            }
         ]
         return <Tab panes={panes}></Tab>
     }

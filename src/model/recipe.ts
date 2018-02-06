@@ -45,12 +45,23 @@ export class Output {
 }
 
 export class Recipe implements Serializable {
-    input = new Array<Ingredient>()
-    output = new Array<Output>()
-    tags = new Tags()
-    craftingMethod: CraftingMethod
+    name: string
+    input : Array<Ingredient>
+    output :  Array<Output>
+    tags : Tags
+    craftingMethod : CraftingMethod
+
+
+    constructor(name?:string,input?:Array<Ingredient>, output?:Array<Output>, tags?:Tags, craftingMethod?:CraftingMethod){
+        this.name = name
+        this.input = input ? input : new Array<Ingredient>()
+        this.output = output ? output : new Array<Output>()
+        this.tags = tags ? tags : new Tags();
+        this.craftingMethod = craftingMethod ? craftingMethod : new CraftingMethod()
+    }
     serialize() {
         return {
+            name:this.name,
             input:this.input.map(val=>val.serialize()),
             output:this.output.map(val=>val.serialize()),
             tags:this.tags.serialize(),
@@ -58,6 +69,7 @@ export class Recipe implements Serializable {
         }
     }
     deserialize(obj: any) {
+        this.name = obj.name
         for(let ingObj of obj.input) {
             let ing = new Ingredient(ingObj.type, ingObj.name, ingObj.count)
             this.input.push(ing)

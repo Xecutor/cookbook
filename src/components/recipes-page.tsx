@@ -1,12 +1,14 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { Recipe } from "../model/recipe";
+import { Recipe, Ingredient, Output } from "../model/recipe";
 import { Tags, Tag } from "../model/tags";
 import Grid from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
 import { FilteredList } from "./filtered-list";
 import { nameAndTagsDefaultFilter } from "../model/entity";
 import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
 import { TagEditor } from "./tag-editor";
+import { CraftingMethod } from "../model/crafting-method";
+import { ModelState } from "../model/model";
 
 export interface RecipeHandler {
     onAddRecipe(newRecipe: Recipe): void
@@ -15,8 +17,7 @@ export interface RecipeHandler {
 }
 
 interface RecipePageProps {
-    tags:Array<Tag>
-    recipes: Array<Recipe>
+    model: ModelState
     handler: RecipeHandler
 }
 
@@ -27,13 +28,16 @@ enum FormState {
 }
 
 interface RecipePageState {
-    name: string
-    maxLevel: number
-    tags: Tags
+    name:string
+    num:number
     formState: FormState
+    input:Array<Ingredient>
+    output:Array<Output>
+    tags:Tags
+    craftingMethod: CraftingMethod
 }
 
-export class RecipePage extends React.Component<RecipePageProps, RecipePageState> {
+export class RecipesPage extends React.Component<RecipePageProps, RecipePageState> {
     constructor(props: RecipePageProps) {
         super(props)
 
@@ -41,18 +45,22 @@ export class RecipePage extends React.Component<RecipePageProps, RecipePageState
     }
     makeClearState() {
         return {
-            name: '',
-            maxLevel: 1,
-            formState: FormState.new,
-            tags: new Tags
+            name:'',
+            num:0,
+            formState : FormState.new,
+            input:new Array<Ingredient>(),
+            output:new Array<Output>(),
+            tags:new Tags(),
+            craftingMethod: new CraftingMethod()
         }
     }
-    selectRecipe(cm: Recipe) {
+    selectRecipe(recipe: Recipe) {
         this.setState({
-            name: cm.name,
-            maxLevel: cm.level,
-            tags: cm.tags,
-            formState: FormState.update
+            name:recipe.name,
+            input:[...recipe.input],
+            output:[...recipe.output],
+            tags:recipe.tags.cloneObject(),
+            craftingMethod:new CraftingMethod(recipe.craftingMethod.name, 1)
         })
     }
     deleteRecipe(cm: Recipe) {
@@ -60,20 +68,15 @@ export class RecipePage extends React.Component<RecipePageProps, RecipePageState
     }
     onSubmitForm() {
         if (this.state.formState == FormState.new) {
-            console.log(`add ${this.state.name}:${this.state.maxLevel}`)
-            this.props.handler.onAddRecipe(new Recipe(this.state.name, this.state.maxLevel, this.state.tags))
+            this.props.handler.onAddRecipe(new Recipe(this.state.name, this.state.input, this.state.output, this.state.tags, this.state.craftingMethod))
         }
         else {
-            this.props.handler.onUpdateRecipe(new Recipe(this.state.name, this.state.maxLevel, this.state.tags))
+            this.props.handler.onUpdateRecipe(new Recipe(this.state.name, this.state.input, this.state.output, this.state.tags, this.state.craftingMethod))
         }
         this.setState(this.makeClearState())
     }
     onNameChanged(newName: string) {
-        this.setState({ name: newName })
-    }
-    onMaxLevelChanged(newMaxLevel: string) {
-        let maxLevelInt = parseInt(newMaxLevel)
-        this.setState({ maxLevel: maxLevelInt })
+        this.setState({name:newName})
     }
     onAddTag(tag:Tag) {
         let updatedTags = this.state.tags.cloneObject()
@@ -85,13 +88,16 @@ export class RecipePage extends React.Component<RecipePageProps, RecipePageState
         updatedTags.remove(tag)
         this.setState({tags:updatedTags})
     }
+    onNumChanged(value:string) {
+        this.setState({num:parseFloat(value)})
+    }
     render() {
         let cmForm = []
         cmForm.push(<Form.Input label="Name" value={this.state.name} onChange={(e, { value }) => this.onNameChanged(value)} />)
-        cmForm.push(<Form.Input label="Max level" value={this.state.maxLevel} onChange={(e, { value }) => this.onMaxLevelChanged(value)} />)
+        cmForm.push(<Form.Input label="Test" value={this.state.num} type="number" onChange={(e, { value }) => this.onNumChanged(value)} />)
         cmForm.push(
             <Form.Field>
-                <TagEditor tags={this.state.tags} allTags={this.props.tags} onAddTag={tag=>this.onAddTag(tag)} onRemoveTag={tag=>this.onRemoveTag(tag)}/>
+                <TagEditor tags={this.state.tags} allTags={this.props.model.tags} onAddTag={tag=>this.onAddTag(tag)} onRemoveTag={tag=>this.onRemoveTag(tag)}/>
             </Form.Field>)
         if (this.state.formState == FormState.new) {
             cmForm.push(<Form.Button>Add</Form.Button>)
@@ -116,14 +122,14 @@ export class RecipePage extends React.Component<RecipePageProps, RecipePageState
                     </Grid.Row>
                 </Grid>
                 <FilteredList
-                    list={this.props.recipe}
+                    list={this.props.model.recipes}
                     filter={nameAndTagsDefaultFilter}
                     renderItem={(cm: Recipe) => cm.name}
                     columns={4}
                     isButton={true}
                     haveDelete={true}
-                    onSelect={(cm: Recipe) => this.selectRecipe(cm)}
-                    onDelete={(cm: Recipe) => this.deleteRecipe(cm)}
+                    onSelect={(recipe: Recipe) => this.selectRecipe(recipe)}
+                    onDelete={(recipe: Recipe) => this.deleteRecipe(recipe)}
                 />
             </div>
         )
