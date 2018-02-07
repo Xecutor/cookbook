@@ -1,14 +1,18 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { Recipe, Ingredient, Output } from "../model/recipe";
+import { Recipe, Ingredient, Output, IngredientType } from "../model/recipe";
 import { Tags, Tag } from "../model/tags";
 import Grid from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
 import { FilteredList } from "./filtered-list";
-import { nameAndTagsDefaultFilter } from "../model/entity";
+import { nameAndTagsDefaultFilter, Entity } from "../model/entity";
 import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
 import { TagEditor } from "./tag-editor";
 import { CraftingMethod } from "../model/crafting-method";
 import { ModelState } from "../model/model";
+import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
+import { NamedPicker } from "./named-picker";
+import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
+import { EntityHandler } from "./entity-editor";
 
 export interface RecipeHandler {
     onAddRecipe(newRecipe: Recipe): void
@@ -29,7 +33,6 @@ enum FormState {
 
 interface RecipePageState {
     name:string
-    num:number
     formState: FormState
     input:Array<Ingredient>
     output:Array<Output>
@@ -46,7 +49,6 @@ export class RecipesPage extends React.Component<RecipePageProps, RecipePageStat
     makeClearState() {
         return {
             name:'',
-            num:0,
             formState : FormState.new,
             input:new Array<Ingredient>(),
             output:new Array<Output>(),
@@ -88,13 +90,28 @@ export class RecipesPage extends React.Component<RecipePageProps, RecipePageStat
         updatedTags.remove(tag)
         this.setState({tags:updatedTags})
     }
-    onNumChanged(value:string) {
-        this.setState({num:parseFloat(value)})
+    onSelectInput(obj:Entity) {
+        let input = [...this.state.input]
+        input.push(new Ingredient(obj.getType() as IngredientType, obj.name, 1));
+        this.setState({input})
+    }
+    onInputCountChange(inp:Ingredient, value:string) {
+        let input = [...this.state.input]
+        inp.count = parseFloat(value)
+        this.setState({input})
     }
     render() {
         let cmForm = []
         cmForm.push(<Form.Input label="Name" value={this.state.name} onChange={(e, { value }) => this.onNameChanged(value)} />)
-        cmForm.push(<Form.Input label="Test" value={this.state.num} type="number" onChange={(e, { value }) => this.onNumChanged(value)} />)
+
+        let inputs = this.state.input.map(inp=><Label>
+            {inp.name}
+            <Form.Input size="mini" fluid value={inp.count} type="number" onChange={(e,{value})=>this.onInputCountChange(inp, value)}/></Label>)
+
+        inputs.push(<NamedPicker values={[...this.props.model.items]} onSelect={(obj:Entity)=>this.onSelectInput(obj)}/>)
+
+        cmForm.push(<Form.Field inline >{inputs}</Form.Field>)
+
         cmForm.push(
             <Form.Field>
                 <TagEditor tags={this.state.tags} allTags={this.props.model.tags} onAddTag={tag=>this.onAddTag(tag)} onRemoveTag={tag=>this.onRemoveTag(tag)}/>

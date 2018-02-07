@@ -7,8 +7,8 @@ import { Item } from './item';
 import { Resource } from "./resource";
 import { Tag, Tags } from './tags';
 
-type IngredientType = "Item" | "Resource" | "Crafter" | "Tag"
-type OutputType = "Item" | "Resource" | "Crafter"
+export type IngredientType = "Item" | "Resource" | "Crafter" | "Tag"
+export type OutputType = "Item" | "Resource" | "Crafter"
 
 export class Ingredient {
     constructor(public type: IngredientType, public name:string, public count: number) {
