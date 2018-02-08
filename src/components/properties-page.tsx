@@ -11,6 +11,9 @@ import Checkbox from "semantic-ui-react/dist/commonjs/modules/Checkbox/Checkbox"
 import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
 import { Item } from "../model/item";
 import { NamedPicker } from "./named-picker";
+import { ModelState } from "../model/model";
+import { Entity } from "../model/entity";
+import { Named } from "../model/named";
 
 export interface PropertiesHandler {
     onAddProp(newProp: PropertyDecl): void
@@ -21,8 +24,7 @@ export interface PropertiesHandler {
 }
 
 interface PropertiesPageProps {
-    declarations: Array<PropertyDecl>
-    items:Array<Item>
+    model: ModelState
     handler: PropertiesHandler
 }
 
@@ -114,7 +116,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
             else {
                 checked = { indeterminate: true }
             }
-            defaultValue = <Checkbox fitted {...checked} onChange={(e, { checked }) => this.onPropDefaultValueChange(prop, checked)} />
+            defaultValue = <Label><Checkbox fitted {...checked} onChange={(e, { checked }) => this.onPropDefaultValueChange(prop, checked)} /></Label>
         }
         else if (prop.type == PropertyType.string || prop.type == PropertyType.text || prop.type == PropertyType.number) {
             console.log(`prop.name=${prop.name}, defaultValue=${prop.defaultValue}`)
@@ -129,13 +131,24 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
                 value={val}
                 onChange={(e, { value }) => this.onPropDefaultValueChange(prop, value)} />
         }
-        else if(prop.type == PropertyType.item) {
+        else if(prop.type == PropertyType.item || prop.type == PropertyType.resource || prop.type == PropertyType.crafter ||
+                prop.type == PropertyType.craftingMethod) {
             let val = prop.defaultValue;
             if(val) {
                 defaultValue=<Label>{val}<Icon name="delete" circular inverted color="red" onClick={()=>this.onPropDefaultValueChange(prop, undefined)}/></Label>
             }
             else {
-                defaultValue=<NamedPicker iconProps={{name:"search", circular:true}} values={this.props.items} onSelect={(item:Item)=>this.onPropDefaultValueChange(prop, item.name)}/>
+                let values;
+                switch(prop.type) {
+                    case PropertyType.item:values = this.props.model.items;break;
+                    case PropertyType.resource:values = this.props.model.resources;break;
+                    case PropertyType.crafter:values = this.props.model.crafters;break;
+                    case PropertyType.craftingMethod:values = this.props.model.craftingMethods;break;
+                }
+                defaultValue=<NamedPicker 
+                                iconProps={{name:"search", circular:true}} 
+                                values={values} 
+                                onSelect={(value:Named)=>this.onPropDefaultValueChange(prop, value.name)}/>
             }
         }
         return (
@@ -143,7 +156,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
                 <Button size="mini" icon="arrow circle up" onClick={() => this.onMoveUp(idx)} />
                 <Button size="mini" icon="arrow circle down" onClick={() => this.onMoveDown(idx)} />
                 {prop.name}&nbsp;:&nbsp;
-                    <Dropdown
+                <Dropdown
                     floating options={options} value={prop.type}
                     onChange={(e, d) => this.onPropTypeChange(prop, d.value as number)} />
                 <Dropdown
@@ -151,7 +164,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
                     value={prop.isRequired ? 1 : 0}
                     onChange={(e, d) => this.onPropReqChange(prop, !!(d.value as number))} />
                 {defaultValue}
-                <Button size="mini" icon="delete" color="red" onClick={() => this.props.handler.onDeleteProp(prop)} />
+                <Icon size="mini" name="delete" color="red" inverted bordered onClick={() => this.props.handler.onDeleteProp(prop)} />
             </Label>
         )
     }
@@ -194,7 +207,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
         let rowsArr = [itemCols, resCols, craftCols]
 
         let idx = 0;
-        for (let prop of this.props.declarations) {
+        for (let prop of this.props.model.properties) {
             rowsArr[prop.pclass].push(<Grid.Column key={`${prop.pclass}x${idx}`}>{this.propToComp(idx, prop)}</Grid.Column>)
             ++idx
         }
@@ -230,7 +243,7 @@ export class PropertiesPage extends React.Component<PropertiesPageProps, Propert
                                 !this.state.newProp[i].name.length ||
                                 this.state.newProp[i].type == -1 ||
                                 this.state.newProp[i].req === undefined ||
-                                this.props.declarations.some(val => val.name == this.state.newProp[i].name && val.pclass == i)} />
+                                this.props.model.properties.some(val => val.name == this.state.newProp[i].name && val.pclass == i)} />
                     </Input>
                 </Grid.Column>)
         }

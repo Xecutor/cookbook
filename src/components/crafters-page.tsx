@@ -14,6 +14,7 @@ import Dropdown from "semantic-ui-react/dist/commonjs/modules/Dropdown/Dropdown"
 import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
 import { ModelState } from "../model/model";
 import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
+import { Named } from "../model/named";
 
 export interface CrafterHandler {
     onAddCrafter(item: Crafter): void
@@ -114,7 +115,12 @@ export class CraftersPage extends React.Component<CraftersPageProps, CraftersPag
         let xtra=<span key="picker">
             <Form.Field {...cmError} key="crafting-methods" label="Crafting methods"/>
             {labels}
-            <NamedPicker key="cm-picker" iconProps={iconProps} values={this.props.model.craftingMethods} onSelect={cm=>this.onAddCraftingMethod(cm as CraftingMethod)}/>
+            <NamedPicker 
+                key="cm-picker"
+                iconProps={iconProps}
+                values={this.props.model.craftingMethods}
+                onSelect={(cm:Named)=>this.onAddCraftingMethod(cm as CraftingMethod)}
+            />
         </span>
         return <EntityEditor
             model={this.props.model}

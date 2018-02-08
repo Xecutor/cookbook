@@ -1,17 +1,18 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import Grid from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
+import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
+import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
+import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
+import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
 import { Recipe, Ingredient, Output, IngredientType } from "../model/recipe";
 import { Tags, Tag } from "../model/tags";
-import Grid from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
 import { FilteredList } from "./filtered-list";
 import { nameAndTagsDefaultFilter, Entity } from "../model/entity";
-import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
 import { TagEditor } from "./tag-editor";
 import { CraftingMethod } from "../model/crafting-method";
 import { ModelState } from "../model/model";
-import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
 import { NamedPicker } from "./named-picker";
-import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
 import { EntityHandler } from "./entity-editor";
 
 export interface RecipeHandler {
@@ -104,14 +105,20 @@ export class RecipesPage extends React.Component<RecipePageProps, RecipePageStat
         let cmForm = []
         cmForm.push(<Form.Input label="Name" value={this.state.name} onChange={(e, { value }) => this.onNameChanged(value)} />)
 
-        let inputs = this.state.input.map(inp=><Label>
-            {inp.name}
-            <Form.Input size="mini" fluid value={inp.count} type="number" onChange={(e,{value})=>this.onInputCountChange(inp, value)}/></Label>)
+        let inputs = this.state.input.map(inp=>(
+            <Label>
+                {inp.name}
+                <Input size="mini" value={inp.count} type="number" onChange={(e,{value})=>this.onInputCountChange(inp, value)}/>
+                <Icon name="delete" color="red" circular inverted/>
+            </Label>)
+        )
 
-        inputs.push(<NamedPicker values={[...this.props.model.items]} onSelect={(obj:Entity)=>this.onSelectInput(obj)}/>)
+        inputs.push(<NamedPicker values={[...this.props.model.items, ...this.props.model.resources]} onSelect={(obj:Entity)=>this.onSelectInput(obj)}/>)
 
-        cmForm.push(<Form.Field inline >{inputs}</Form.Field>)
+        cmForm.push(<Form.Field label="Inputs"/>)
+        cmForm.push(<Form.Field inline>{inputs}</Form.Field>)
 
+        cmForm.push(<Form.Field label="Tags"/>)
         cmForm.push(
             <Form.Field>
                 <TagEditor tags={this.state.tags} allTags={this.props.model.tags} onAddTag={tag=>this.onAddTag(tag)} onRemoveTag={tag=>this.onRemoveTag(tag)}/>

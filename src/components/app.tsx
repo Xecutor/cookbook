@@ -222,8 +222,7 @@ export class CookBookApp extends React.Component<any, CookBookAppState>
             {
                 menuItem: 'Properties',
                 render: () => <PropertiesPage
-                    declarations={this.state.properties}
-                    items={this.state.items}
+                    model={this.state}
                     handler={this}
                 />
             },
