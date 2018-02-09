@@ -14,6 +14,7 @@ import { CraftingMethod } from "../model/crafting-method";
 import { ModelState } from "../model/model";
 import { NamedPicker } from "./named-picker";
 import { EntityHandler } from "./entity-editor";
+import { Named } from "../model/named";
 
 export interface RecipeHandler {
     onAddRecipe(newRecipe: Recipe): void
@@ -39,6 +40,11 @@ interface RecipePageState {
     output:Array<Output>
     tags:Tags
     craftingMethod: CraftingMethod
+}
+
+type IngredientNameType = {
+    name:string
+    type:IngredientType
 }
 
 export class RecipesPage extends React.Component<RecipePageProps, RecipePageState> {
@@ -91,9 +97,9 @@ export class RecipesPage extends React.Component<RecipePageProps, RecipePageStat
         updatedTags.remove(tag)
         this.setState({tags:updatedTags})
     }
-    onSelectInput(obj:Entity) {
+    onSelectInput(obj:IngredientNameType) {
         let input = [...this.state.input]
-        input.push(new Ingredient(obj.getType() as IngredientType, obj.name, 1));
+        input.push(new Ingredient(obj.type as IngredientType, obj.name, 1));
         this.setState({input})
     }
     onInputCountChange(inp:Ingredient, value:string) {
@@ -105,18 +111,46 @@ export class RecipesPage extends React.Component<RecipePageProps, RecipePageStat
         let cmForm = []
         cmForm.push(<Form.Input label="Name" value={this.state.name} onChange={(e, { value }) => this.onNameChanged(value)} />)
 
-        let inputs = this.state.input.map(inp=>(
-            <Label>
-                {inp.name}
-                <Input size="mini" value={inp.count} type="number" onChange={(e,{value})=>this.onInputCountChange(inp, value)}/>
-                <Icon name="delete" color="red" circular inverted/>
-            </Label>)
-        )
-
-        inputs.push(<NamedPicker values={[...this.props.model.items, ...this.props.model.resources]} onSelect={(obj:Entity)=>this.onSelectInput(obj)}/>)
+        const inputTypes = ["Item", "Resource", "Crafter", "Tag"]
+        let inputColumns : JSX.Element[][] = []
+        let inputsHeader = []
+        for(let itype of inputTypes) {
+            inputsHeader.push(itype)
+            let inputs = this.state.input.filter(inp=>inp.type==itype).map(inp=>(
+                <Label size="mini">
+                    {inp.name}
+                    <Input size="mini" width={1} value={inp.count} type="number" onChange={(e,{value})=>this.onInputCountChange(inp, value)}/>
+                    <Icon name="delete" size="mini" color="red" circular inverted/>
+                </Label>)
+            )
+            let values;
+            switch(itype) {
+                case "Item": values = this.props.model.items;break;
+                case "Resource": values = this.props.model.resources;break;
+                case "Crafter": values = this.props.model.crafters; break;
+                case "Tag": values = this.props.model.tags;break;
+            }
+            if(itype=="Tag") {
+                values = (values as string[]).map(tag=>({name:tag, type:"Tag"}))
+            }
+            else {
+                values = (values as Entity[]).map((ent:Entity)=>({name:ent.name, type:ent.getType()}))
+            }
+            inputs.push(<NamedPicker iconProps={{bordered:true}} values={values} onSelect={(obj:IngredientNameType)=>this.onSelectInput(obj)}/>)
+            inputColumns.push(inputs)
+        }
 
         cmForm.push(<Form.Field label="Inputs"/>)
-        cmForm.push(<Form.Field inline>{inputs}</Form.Field>)
+        cmForm.push(<Form.Field inline>
+            <Grid centered>
+                <Grid.Row columns={4}>
+                      {inputsHeader.map(col=><Grid.Column><Label color="olive">{col}</Label></Grid.Column>)}
+                </Grid.Row>
+                <Grid.Row columns={4}>
+                    {inputColumns.map(col=><Grid.Column>{col}</Grid.Column>)}
+                </Grid.Row>
+            </Grid>
+            </Form.Field>)
 
         cmForm.push(<Form.Field label="Tags"/>)
         cmForm.push(
@@ -136,13 +170,13 @@ export class RecipesPage extends React.Component<RecipePageProps, RecipePageStat
             <div>
                 <Grid centered columns={3}>
                     <Grid.Row key="form" centered>
-                        <Grid.Column key="pad1" />
-                        <Grid.Column key="middle">
+                        <Grid.Column key="pad1" width={1}/>
+                        <Grid.Column key="middle" width={9}>
                             <Form size="tiny" onSubmit={() => this.onSubmitForm()}>
                                 {cmForm}
                             </Form>
                         </Grid.Column>
-                        <Grid.Column key="pad2" />
+                        <Grid.Column key="pad2" width={1}/>
                     </Grid.Row>
                 </Grid>
                 <FilteredList

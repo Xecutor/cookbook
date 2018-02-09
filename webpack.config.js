@@ -63,7 +63,7 @@ module.exports = {
     },
     plugins: [
       new HtmlWebpackPlugin({
-        title:'Cookbook recipe editor'
+        title:'Ricettario - recipe editor'
       }),
 //      new OfflinePlugin({
 //        ServiceWorker: {
