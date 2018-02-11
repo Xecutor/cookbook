@@ -1,10 +1,10 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+
+import {Input, Button, Label} from "semantic-ui-react";
+
 import { Tags, Tag } from "../model/tags";
 import { simpleStringFilter, FilteredList } from "./filtered-list";
-import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
-import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
-import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
 
 interface TagsPageProps {
     tags: string[]

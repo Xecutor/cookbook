@@ -1,11 +1,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import Grid from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
-import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
-import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
-import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
-import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
-import { Recipe, Ingredient, Output, IngredientType } from "../model/recipe";
+import {Grid, Form, Label, Input, Icon, Dropdown} from "semantic-ui-react";
+
+import { Recipe, Ingredient, Output, IngredientType, OutputType } from "../model/recipe";
 import { Tags, Tag } from "../model/tags";
 import { FilteredList } from "./filtered-list";
 import { nameAndTagsDefaultFilter, Entity } from "../model/entity";
@@ -47,20 +44,25 @@ type IngredientNameType = {
     type:IngredientType
 }
 
+type OutputNameType = {
+    name:string
+    type:OutputType
+}
+
 export class RecipesPage extends React.Component<RecipePageProps, RecipePageState> {
     constructor(props: RecipePageProps) {
         super(props)
 
         this.state = this.makeClearState()
     }
-    makeClearState() {
+    makeClearState():RecipePageState {
         return {
             name:'',
             formState : FormState.new,
             input:new Array<Ingredient>(),
             output:new Array<Output>(),
             tags:new Tags(),
-            craftingMethod: new CraftingMethod()
+            craftingMethod: undefined
         }
     }
     selectRecipe(recipe: Recipe) {
@@ -69,7 +71,8 @@ export class RecipesPage extends React.Component<RecipePageProps, RecipePageStat
             input:[...recipe.input],
             output:[...recipe.output],
             tags:recipe.tags.cloneObject(),
-            craftingMethod:new CraftingMethod(recipe.craftingMethod.name, 1)
+            craftingMethod:new CraftingMethod(recipe.craftingMethod.name, recipe.craftingMethod.level),
+            formState:FormState.update
         })
     }
     deleteRecipe(cm: Recipe) {
@@ -107,20 +110,38 @@ export class RecipesPage extends React.Component<RecipePageProps, RecipePageStat
         inp.count = parseFloat(value)
         this.setState({input})
     }
-    render() {
-        let cmForm = []
-        cmForm.push(<Form.Input label="Name" value={this.state.name} onChange={(e, { value }) => this.onNameChanged(value)} />)
-
-        const inputTypes = ["Item", "Resource", "Crafter", "Tag"]
-        let inputColumns : JSX.Element[][] = []
-        let inputsHeader = []
-        for(let itype of inputTypes) {
-            inputsHeader.push(itype)
-            let inputs = this.state.input.filter(inp=>inp.type==itype).map(inp=>(
-                <Label size="mini">
-                    {inp.name}
-                    <Input size="mini" width={1} value={inp.count} type="number" onChange={(e,{value})=>this.onInputCountChange(inp, value)}/>
-                    <Icon name="delete" size="mini" color="red" circular inverted/>
+    onDeleteInput(inp:Ingredient) {
+        let input = this.state.input.filter(val=>val!=inp);
+        this.setState({input})
+    }
+    onSelectOutput(obj:OutputNameType) {
+        let output = [...this.state.output]
+        output.push(new Output(obj.type as OutputType, obj.name, 1));
+        this.setState({output})
+    }
+    onOutputCountChange(out:Output, value:string) {
+        let output = [...this.state.output]
+        out.count = parseFloat(value)
+        this.setState({output})
+    }
+    onDeleteOutput(out:Output) {
+        let output = this.state.output.filter(val=>val!=out);
+        this.setState({output})
+    }
+    makeIO(types:string[], objects:(Ingredient|Output)[], 
+        onCountChange:(obj:Ingredient|Output, value:string)=>void,
+        onSelect:(obj:IngredientNameType|OutputNameType)=>void,
+        onDelete:(obj:Ingredient|Output)=>void) {
+        let header:string[] = [];
+        let columns = []
+        for(let itype of types) {
+            let column = []
+            header.push(itype)
+            let colValues = objects.filter(inp=>inp.type==itype).map((obj, idx)=>(
+                <Label size="mini" key={`${itype}-${idx}`}>
+                    {obj.name}
+                    <Input size="mini" width={1} value={obj.count} type="number" onChange={(e,{value})=>onCountChange(obj, value)}/>
+                    <Icon name="delete" size="mini" color="red" circular inverted onClick={()=>onDelete(obj)}/>
                 </Label>)
             )
             let values;
@@ -136,34 +157,124 @@ export class RecipesPage extends React.Component<RecipePageProps, RecipePageStat
             else {
                 values = (values as Entity[]).map((ent:Entity)=>({name:ent.name, type:ent.getType()}))
             }
-            inputs.push(<NamedPicker iconProps={{bordered:true}} values={values} onSelect={(obj:IngredientNameType)=>this.onSelectInput(obj)}/>)
-            inputColumns.push(inputs)
+            colValues.push(<NamedPicker key={`${itype}-picker`} iconProps={{bordered:true}} values={values} onSelect={(obj:IngredientNameType)=>onSelect(obj)}/>)
+            columns.push(colValues)
         }
+        return {header, columns}
+    }
 
-        cmForm.push(<Form.Field label="Inputs"/>)
-        cmForm.push(<Form.Field inline>
+    onSelectCraftingMethod(cm:CraftingMethod) {
+        let craftingMethod = new CraftingMethod(cm.name, 1)
+        this.setState({craftingMethod})
+    }
+
+    onRemoveCraftingMethod(cm:CraftingMethod) {
+        this.setState({craftingMethod:undefined})
+    }
+    
+    onCraftingMethodLevelChange(lvl:number) {
+        let craftingMethod = new CraftingMethod(this.state.craftingMethod.name, lvl)
+        this.setState({craftingMethod})
+    }
+
+    createCraftingMethod() {
+        let cm = this.state.craftingMethod
+        let cmDef = this.props.model.craftingMethods.find(val=>val.name==cm.name)
+        let maxLevel = cmDef ? cmDef.level : 1
+        let lvlSelect = []
+        for(let i=1;i<=maxLevel;++i) {
+            lvlSelect.push({text:`Lvl:${i}`, value:i})
+        }
+        return <Label 
+            key={cm.name}
+            onClick={()=>this.onRemoveCraftingMethod(cm)}>
+                {cm.name}&nbsp;&nbsp;
+                <Dropdown 
+                    value={cm.level}
+                    options={lvlSelect}
+                    onChange={(e,{value})=>this.onCraftingMethodLevelChange(value as number)}
+                />
+                <Icon name="delete" inverted circular color="red"/>
+        </Label>
+    }
+
+    validate() {
+        return this.state.name.length && this.state.craftingMethod && this.state.output.length && !this.props.model.recipes.find(r=>r.name==this.state.name)
+    }
+
+    render() {
+        let cmForm = []
+        cmForm.push(<Form.Input 
+                        label="Name"
+                        key="name"
+                        error={this.state.name.length==0}
+                        required={true}
+                        value={this.state.name}
+                        onChange={(e, { value }) => this.onNameChanged(value)}
+                    />)
+
+        const inputTypes = ["Item", "Resource", "Crafter", "Tag"]
+        let {header:inputsHeader, columns:inputsColumns} = this.makeIO(inputTypes, this.state.input,
+            (obj:Ingredient, value:string)=>this.onInputCountChange(obj, value),
+            (obj:IngredientNameType)=>this.onSelectInput(obj),
+            (obj:Ingredient)=>this.onDeleteInput(obj)
+        )
+
+        cmForm.push(<Form.Field key="inputs-label" label="Inputs"/>)
+        cmForm.push(<Form.Field key="inputs" inline>
             <Grid centered>
                 <Grid.Row columns={4}>
-                      {inputsHeader.map(col=><Grid.Column><Label color="olive">{col}</Label></Grid.Column>)}
+                      {inputsHeader.map((col,idx)=><Grid.Column key={`h${idx}`}><Label color="olive">{col}</Label></Grid.Column>)}
                 </Grid.Row>
                 <Grid.Row columns={4}>
-                    {inputColumns.map(col=><Grid.Column>{col}</Grid.Column>)}
+                    {inputsColumns.map((col, idx)=><Grid.Column key={`c${idx}`}>{col}</Grid.Column>)}
                 </Grid.Row>
             </Grid>
             </Form.Field>)
 
-        cmForm.push(<Form.Field label="Tags"/>)
+        const outputTypes = ["Item", "Resource", "Crafter"]
+        let {header:outputsHeader, columns: outputsColumns} = this.makeIO(outputTypes, this.state.output,
+            (obj:Output, value:string)=>this.onOutputCountChange(obj, value),
+            (obj:OutputNameType)=>this.onSelectOutput(obj),
+            (obj:Output)=>this.onDeleteOutput(obj)
+        );
+
+        cmForm.push(<Form.Field key="outputs-label" required={true} error={!this.state.output.length} label="Outputs"/>)
+        cmForm.push(<Form.Field key="outputs" inline>
+            <Grid centered>
+                <Grid.Row columns={3}>
+                      {outputsHeader.map((col,idx)=><Grid.Column key={`h${idx}`}><Label color="olive">{col}</Label></Grid.Column>)}
+                </Grid.Row>
+                <Grid.Row columns={3}>
+                    {outputsColumns.map((col,idx)=><Grid.Column key={`c${idx}`}>{col}</Grid.Column>)}
+                </Grid.Row>
+            </Grid>
+            </Form.Field>)
+        cmForm.push(<Form.Field required={true} error={!this.state.craftingMethod} key="crafting-method-label" label="Crafting method"/>)
+        if(this.state.craftingMethod) {
+            cmForm.push(this.createCraftingMethod())
+        }
+        else {
+            cmForm.push(<NamedPicker
+                key="crafting-method-picker"
+                values={this.props.model.craftingMethods}
+                iconProps={{name:"search"}}
+                onSelect={(cm:CraftingMethod)=>this.onSelectCraftingMethod(cm)}
+            />)
+        }
+
+        cmForm.push(<Form.Field key="tags-label" label="Tags"/>)
         cmForm.push(
-            <Form.Field>
+            <Form.Field key="tags">
                 <TagEditor tags={this.state.tags} allTags={this.props.model.tags} onAddTag={tag=>this.onAddTag(tag)} onRemoveTag={tag=>this.onRemoveTag(tag)}/>
             </Form.Field>)
         if (this.state.formState == FormState.new) {
-            cmForm.push(<Form.Button>Add</Form.Button>)
+            cmForm.push(<Form.Button disabled={!this.validate()} key="add">Add</Form.Button>)
         }
         else {
-            cmForm.push(<Form.Group>
-                <Form.Button>Update</Form.Button>
-                <Form.Button onClick={() => this.setState(this.makeClearState())}>Cancel</Form.Button>
+            cmForm.push(<Form.Group key="update-cancel">
+                <Form.Button key="update">Update</Form.Button>
+                <Form.Button key="cancel" onClick={() => this.setState(this.makeClearState())}>Cancel</Form.Button>
             </Form.Group>)
         }
         return (

@@ -1,12 +1,9 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+
+import {Popup, Icon, Grid, Input, List, Button} from "semantic-ui-react";
+
 import { Named } from "../model/named";
-import Popup from "semantic-ui-react/dist/commonjs/modules/Popup/Popup";
-import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
-import Grid from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
-import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
-import List from "semantic-ui-react/dist/commonjs/elements/List/List";
-import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
 import { Tags } from "../model/tags";
 import { nameAndTagsDefaultFilter } from "../model/entity";
 

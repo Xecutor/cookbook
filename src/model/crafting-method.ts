@@ -1,7 +1,9 @@
+import { TagEditor } from './../components/tag-editor';
+import { Named } from './named';
 import { Tags } from './tags';
 import { Serializable } from './serializable';
 
-export class CraftingMethod implements Serializable {
+export class CraftingMethod implements Serializable, Named {
     name: string
     level: number
     tags: Tags
@@ -9,6 +11,15 @@ export class CraftingMethod implements Serializable {
         this.name = name
         this.level = level
         this.tags = tags ? tags : new Tags;
+    }
+    cleanExport() {
+        let rv : any = {}
+        rv.name = this.name
+        rv.maxLevel = this.level
+        if (!this.tags.isEmpty()) {
+            rv.tags = this.tags.toState()
+        }
+        return rv
     }
     serialize() {
         return {

@@ -21,6 +21,9 @@ import { CraftersPage, CrafterHandler } from "./crafters-page";
 import { Crafter } from "../model/crafter";
 import { RecipesPage, RecipeHandler } from "./recipes-page";
 import { Recipe } from "../model/recipe";
+import { namedEq } from "../model/named";
+import { ImportExportPage } from "./import-export-page";
+import { TestPage } from "./test-page";
 
 //require('offline-plugin/runtime').install();
 
@@ -178,14 +181,13 @@ export class CookBookApp extends React.Component<any, CookBookAppState>
         this.updateStateFromModel()
     }
 
-
     onAddCraftingMethod(cm: CraftingMethod) {
         this.model.craftingMethods.push(cm);
         this.updateStateFromModel()
     }
 
     onUpdateCraftingMethod(cm: CraftingMethod) {
-        let oldCm = this.model.craftingMethods.find(cm, (a, b) => a.name == b.name)
+        let oldCm = this.model.craftingMethods.find(cm, namedEq)
         oldCm.level = cm.level
         oldCm.tags = cm.tags.cloneObject()
         this.model.craftingMethods.mark()
@@ -193,20 +195,38 @@ export class CookBookApp extends React.Component<any, CookBookAppState>
     }
 
     onDeleteCraftingMethod(cm: CraftingMethod) {
-        this.model.craftingMethods.remove(cm, (a, b) => a.name == b.name)
+        this.model.craftingMethods.remove(cm, namedEq)
         this.updateStateFromModel()
     }
 
     onAddRecipe(recipe:Recipe) {
-
+        this.model.recipes.push(recipe)
+        this.updateStateFromModel()
     }
 
     onUpdateRecipe(recipe:Recipe) {
-
+        let oldRecipe = this.model.recipes.find(recipe, namedEq)
+        oldRecipe.input = recipe.input
+        oldRecipe.output = recipe.output
+        oldRecipe.craftingMethod = recipe.craftingMethod
+        oldRecipe.tags = recipe.tags
+        this.updateStateFromModel()
     }
 
     onDeleteRecipe(recipe:Recipe) {
-        
+        this.model.recipes.remove(recipe, namedEq)
+    }
+
+    importJson(json:string) {
+        let newModel = new Model()
+        try{
+            newModel.deserialize(json)
+            this.model = newModel
+            this.updateStateFromModel()
+        }catch(e) {
+            return `Error:${e}`;
+        }
+        return "Success"
     }
 
     render() {
@@ -259,6 +279,19 @@ export class CookBookApp extends React.Component<any, CookBookAppState>
                 render: () => <RecipesPage
                     model={this.state}
                     handler={this}
+                />
+            },
+            { 
+                menuItem: 'Test', 
+                render: () => <TestPage
+                    model={this.model}
+                />
+            },
+            { 
+                menuItem: 'Export/Import', 
+                render: () => <ImportExportPage
+                    model={this.model}
+                    onImport={(json)=>this.importJson(json)}
                 />
             }
         ]

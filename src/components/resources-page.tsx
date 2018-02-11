@@ -1,6 +1,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+
 import { Entity } from "../model/entity";
 import { PropertyDecl, PropertiesCollection, PropertyClass } from "../model/property";
 import { FilteredList } from "./filtered-list";

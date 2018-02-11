@@ -14,6 +14,9 @@ export class Tags extends TrackableArray<Tag>{
             this.tagsMap[tag] = true
         }
     }
+    isEmpty() {
+        return this.array.length == 0
+    }
     remove(tag: Tag) {
         if (this.tagsMap[tag]) {
             super.remove(tag, (a, b) => a == b)

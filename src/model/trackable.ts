@@ -1,5 +1,6 @@
 import { Serializable } from './serializable';
 import Tab from "semantic-ui-react/dist/commonjs/modules/Tab/Tab";
+import { Named } from './named';
 
 export interface Trackable<T> {
     modified: boolean
@@ -8,7 +9,7 @@ export interface Trackable<T> {
     toState(): Array<T>
 }
 
-export class TrackableArray<T extends (Serializable | string)> implements Trackable<T>{
+export class TrackableArray<T extends ((Named&Serializable) | string)> implements Trackable<T>{
     array = new Array<T>()
     modified = true
     push(val: T) {
@@ -19,6 +20,14 @@ export class TrackableArray<T extends (Serializable | string)> implements Tracka
         for (let v of this.array) {
             if (eq(v, val)) {
                 return v
+            }
+        }
+        return null
+    }
+    findByName(name: string) {
+        for (let v of this.array) {
+            if ((v as Named).name && (v as Named).name == name) {
+                return v;
             }
         }
         return null
@@ -74,5 +83,6 @@ export class TrackableArray<T extends (Serializable | string)> implements Tracka
                 this.push(obj);
             }
         }
+        this.modified = true
     }
 }

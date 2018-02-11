@@ -1,19 +1,18 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+
+import {Label, Dropdown, Icon, Form} from "semantic-ui-react";
+
 import { Entity } from "../model/entity";
 import { PropertyDecl, PropertiesCollection, PropertyClass } from "../model/property";
 import { FilteredList } from "./filtered-list";
 import { Crafter } from "../model/crafter";
 import { EntityEditor, EntityHandler } from "./entity-editor";
 import { Tags, Tag } from "../model/tags";
-import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
 import { NamedPicker } from "./named-picker";
 import { CraftingMethod } from "../model/crafting-method";
 import { TrackableArray } from "../model/trackable";
-import Dropdown from "semantic-ui-react/dist/commonjs/modules/Dropdown/Dropdown";
-import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
 import { ModelState } from "../model/model";
-import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
 import { Named } from "../model/named";
 
 export interface CrafterHandler {
@@ -34,7 +33,6 @@ interface CraftersPageState {
 export class CraftersPage extends React.Component<CraftersPageProps, CraftersPageState> implements EntityHandler {
     constructor(props:CraftersPageProps) {
         super(props)
-        
         this.state = {
             craftingMethods: []
         }

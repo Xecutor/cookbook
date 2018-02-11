@@ -1,14 +1,9 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+
+import {Grid, Dropdown, Label, Input, Button, Select, Checkbox, Icon} from "semantic-ui-react";
+
 import { PropertyDecl, PropertyClass, PropertyType } from "../model/property";
-import Grid from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
-import Dropdown from "semantic-ui-react/dist/commonjs/modules/Dropdown/Dropdown";
-import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
-import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
-import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
-import Select from "semantic-ui-react/dist/commonjs/addons/Select/Select";
-import Checkbox from "semantic-ui-react/dist/commonjs/modules/Checkbox/Checkbox";
-import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
 import { Item } from "../model/item";
 import { NamedPicker } from "./named-picker";
 import { ModelState } from "../model/model";

@@ -1,10 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import Grid, { GridProps } from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
-import Input from "semantic-ui-react/dist/commonjs/elements/Input/Input";
-import List from "semantic-ui-react/dist/commonjs/elements/List/List";
-import Button from "semantic-ui-react/dist/commonjs/elements/Button/Button";
+import {Grid, GridProps, Input, List, Button} from "semantic-ui-react"
 
 interface FilteredListProps<T> {
     list: Array<T>

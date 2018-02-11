@@ -10,6 +10,11 @@ export class Crafter extends Item {
     getType() {
         return "Crafter"
     }
+    cleanExport() {
+        let rv : any = super.cleanExport()
+        rv.craftingMethods = this.craftingMethods.map(cm=>({name:cm.name, level:cm.level}))
+        return rv
+    }
     serialize() {
         return {
             ...super.serialize(), 

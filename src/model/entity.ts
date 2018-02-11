@@ -28,6 +28,22 @@ export abstract class Entity implements Serializable, Named, Tagged {
     }
 
     abstract getType():string;
+
+    cleanExport() {
+        let rv: any = {}
+        rv.name = this.name
+        if (this.properties.array.length) {
+            rv.props = {}
+        }
+        for (let prop of this.properties.array) {
+            rv.props[prop.name] = prop.value
+        }
+        if (!this.tags.isEmpty()) {
+            rv.tags = this.tags.toState()
+        }
+        return rv
+    }
+
     serialize() {
         return {
             name: this.name,
@@ -35,6 +51,7 @@ export abstract class Entity implements Serializable, Named, Tagged {
             tags: this.tags.serialize()
         }
     }
+    
     deserialize(obj: any) {
         this.name = obj.name
         this.properties.deserialize(obj.properties)

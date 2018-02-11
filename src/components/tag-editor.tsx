@@ -2,6 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import { Button, Icon, Popup, Input, Grid, List } from 'semantic-ui-react';
+
 import { Tag, Tags } from "../model/tags";
 import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
 
@@ -30,7 +31,10 @@ export class TagEditor extends React.Component<TagEditorProps, TagEditorState> {
 
     render() {
         let lst = this.props.allTags.filter((item) => item.indexOf(this.state.filter) >= 0);
-        let rv = this.props.tags.array.map(tag=><Label tag key={tag}>{tag}<Icon size="mini" circular name="delete" color="red" inverted onClick={()=>this.props.onRemoveTag(tag)}/></Label>)
+        let rv = this.props.tags.array.map(tag=><Label tag key={tag}>
+                {tag}
+                <Icon size="mini" circular name="delete" color="red" inverted onClick={()=>this.props.onRemoveTag(tag)}/>
+            </Label>)
         rv.push(
             <Popup
                 key="tags-popup"

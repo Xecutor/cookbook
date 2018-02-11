@@ -6,6 +6,7 @@ import { Tags } from "./tags";
 import { PropertyDecl } from './property';
 import { CraftingMethod } from './crafting-method';
 import { TrackableArray, Trackable } from './trackable';
+import { Entity } from './entity';
 
 export interface ModelState {
     tags?: Array<string>
@@ -46,6 +47,15 @@ export class Model {
 
         return result
     }
+    cleanExport() {
+        let result : any = {}
+        result.items = this.items.array.map(item=>item.cleanExport())
+        result.resources = this.resources.array.map(res=>res.cleanExport())
+        result.crafters = this.crafters.array.map(craft=>craft.cleanExport())
+        result.craftingMethods = this.craftingMethods.array.map(cm=>cm.cleanExport())
+        result.recipes = this.recipes.array.map(recipe=>recipe.cleanExport())
+        return JSON.stringify(result)
+    }
     serialize() {
         let result: any = {}
         result.tags = this.tags.serialize()
@@ -54,6 +64,7 @@ export class Model {
         result.resources = this.resources.serialize()
         result.crafters = this.crafters.serialize()
         result.craftingMethods = this.craftingMethods.serialize()
+        result.recipes = this.recipes.serialize()
         let resultStr = JSON.stringify(result);
         console.log("saving:", resultStr);
         return resultStr;
@@ -67,5 +78,17 @@ export class Model {
         this.resources.deserialize(json.resources || [], Resource);
         this.crafters.deserialize(json.crafters || [], Crafter);
         this.craftingMethods.deserialize(json.craftingMethods || [], CraftingMethod)
+        this.recipes.deserialize(json.recipes || [], Recipe)
+    }
+    findRecipesByNameType(name:string, type:string) {
+        let rv = []
+        for(let r of this.recipes.array) {
+            for(let o of r.output) {
+                if(o.type==type && o.name==name) {
+                    rv.push(r)
+                }
+            }
+        }
+        return rv
     }
 }

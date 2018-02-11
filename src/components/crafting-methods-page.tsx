@@ -1,11 +1,12 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+
+import {Grid, Form} from "semantic-ui-react";
+
 import { CraftingMethod } from "../model/crafting-method";
 import { Tags, Tag } from "../model/tags";
-import Grid from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
 import { FilteredList } from "./filtered-list";
 import { nameAndTagsDefaultFilter } from "../model/entity";
-import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
 import { TagEditor } from "./tag-editor";
 
 export interface CraftingMethodsHandler {
@@ -87,8 +88,15 @@ export class CraftingMethodsPage extends React.Component<CraftingMethodsPageProp
     }
     render() {
         let cmForm = []
-        cmForm.push(<Form.Input key="name" label="Name" value={this.state.name} onChange={(e, { value }) => this.onNameChanged(value)} />)
-        cmForm.push(<Form.Input key="max-level" label="Max level" value={this.state.maxLevel} onChange={(e, { value }) => this.onMaxLevelChanged(value)} />)
+        cmForm.push(<Form.Input 
+                        key="name"
+                        label="Name"
+                        error={this.state.name.length==0}
+                        required={true}
+                        value={this.state.name}
+                        onChange={(e, { value }) => this.onNameChanged(value)}
+                    />)
+        cmForm.push(<Form.Input key="max-level" type="number" label="Max level" value={this.state.maxLevel} onChange={(e, { value }) => this.onMaxLevelChanged(value)} />)
         cmForm.push(<Form.Field key="tags-label" label="Tags"/>)
         cmForm.push(
             <Form.Field key="tags">

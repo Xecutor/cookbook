@@ -1,20 +1,19 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+
+import {Form, Grid, Label, Icon, Dropdown} from "semantic-ui-react";
+
 import { Entity, nameAndTagsDefaultFilter } from "../model/entity";
 import { PropertyDecl, PropertyType, PropertiesCollection } from "../model/property";
 import { FilteredList } from "./filtered-list";
-import Form from "semantic-ui-react/dist/commonjs/collections/Form/Form";
-import Grid from "semantic-ui-react/dist/commonjs/collections/Grid/Grid";
 import { Tags, Tag } from "../model/tags";
 import { TagEditor } from "./tag-editor";
-import Label from "semantic-ui-react/dist/commonjs/elements/Label/Label";
 import { FormButtonProps } from "semantic-ui-react/dist/commonjs/collections/Form/FormButton";
 import { Item } from "../model/item";
 import { NamedPicker } from "./named-picker";
 import { ModelState } from "../model/model";
-import Icon from "semantic-ui-react/dist/commonjs/elements/Icon/Icon";
 import { Resource } from "../model/resource";
-import Dropdown from "semantic-ui-react/dist/commonjs/modules/Dropdown/Dropdown";
+import { CraftingMethod } from "../model/crafting-method";
 
 export interface EntityHandler {
     onSelectEntity?: (ent:Entity)=>void
@@ -80,15 +79,6 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
 
     onFormFieldUpdate(propDecl: PropertyDecl, value: string | number | boolean | {name:string, level:number}) {
         let name = propDecl.name;
-        // if(propDecl.type==PropertyType.number) {
-        //     let oldVal = value;
-        //     value = value.toString().replace(/[^\d.+-]/, '')
-        //     try{
-        //         value = parseFloat(value)
-        //     }catch(e) {
-        //     }
-        //     console.log(`oldval=${oldVal}, fixed val:${value}`)
-        // }
 
         let updatedProps = this.state.props.clone()
         let prop = updatedProps.findByName(name)
@@ -156,10 +146,16 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
                     cbValue["error"] = true
                 }
             }
-            return <Form.Checkbox key={prop.name} {...cbValue} label={prop.name} onChange={(e, { checked }) => this.onFormFieldUpdate(prop, checked)} />;
+            return <Form.Checkbox
+                required={prop.isRequired}
+                key={prop.name} {...cbValue}
+                label={prop.name}
+                onChange={(e, { checked }) => this.onFormFieldUpdate(prop, checked)}
+            />;
         }
         else if (prop.type == PropertyType.string || prop.type == PropertyType.number) {
             let inValue: { [key: string]: string | boolean } = {}
+            let type = prop.type == PropertyType.number ? "number" : "text"
             if (propVal) {
                 inValue["value"] = typeof (propVal.value) === "string" ? propVal.value as string : propVal.value.toString()
                 if (prop.type == PropertyType.number) {
@@ -180,7 +176,14 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
                     inValue["error"] = true
                 }
             }
-            return <Form.Input key={prop.name} {...inValue} label={prop.name} onChange={(e, { value }) => this.onFormFieldUpdate(prop, value)} />
+            return <Form.Input
+                required={prop.isRequired}
+                type={type}
+                key={prop.name}
+                {...inValue}
+                label={prop.name}
+                onChange={(e, { value }) => this.onFormFieldUpdate(prop, value)}
+            />
         }
         else if (prop.type == PropertyType.text) {
             let inValue: { [key: string]: string | boolean } = {}
@@ -193,70 +196,87 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
                     inValue["error"] = true
                 }
             }
-            return <Form.TextArea key={prop.name} {...inValue} label={prop.name} onChange={(e, { value }) => this.onFormFieldUpdate(prop, value)} />
+            return <Form.TextArea
+                required={prop.isRequired}
+                key={prop.name}
+                {...inValue}
+                label={prop.name}
+                onChange={(e, { value }) => this.onFormFieldUpdate(prop, value)}
+            />
         }
-        else if (prop.type == PropertyType.item || prop.type == PropertyType.resource || prop.type == PropertyType.crafter ) {
+        else if (prop.type == PropertyType.item || prop.type == PropertyType.resource || prop.type == PropertyType.crafter) {
             if (propVal && propVal.value) {
                 return [
-                    <Form.Field label={prop.name}/>,
-                    <Form.Field><Label>{propVal.value}<Icon name="delete" circular inverted color="red" onClick={()=>this.onFormFieldUpdate(prop, undefined)}/></Label></Form.Field>
-                ]
-            }
-            else {
-                let values;
-                switch(prop.type) {
-                    case PropertyType.item:values = this.props.model.items;break;
-                    case PropertyType.resource:values = this.props.model.resources;break;
-                    case PropertyType.crafter:values = this.props.model.crafters;break;
-                }
-                return [
-                    <Form.Field key={prop.name} label={prop.name}/>,
-                    <NamedPicker
-                        key={`${prop.name}-picker`}
-                        iconProps={{ name: "search", circular: true }}
-                        values={values}
-                        onSelect={({name}) => this.onFormFieldUpdate(prop, name)} />
-                ]
-            }
-        }
-        else if ( prop.type == PropertyType.craftingMethod ) {
-            if (propVal && propVal.value) {
-                if(typeof propVal.value==="string") {
-                    propVal.value={
-                        name:propVal.value,
-                        level:1
-                    }
-                }
-                let {name:cmname,level:cmlevel} = (propVal.value as {name:string, level:number})
-                let cm = this.props.model.craftingMethods.find(cm=>cm.name==cmname)
-                let maxLevel = cm ? cm.level : 1
-                let options = []
-                for(let i=1;i<=maxLevel;++i) {
-                    options.push({text:i.toString(), value:i})
-                }
-                return [
-                    <Form.Field label={prop.name}/>,
+                    <Form.Field required={prop.isRequired} label={prop.name} />,
                     <Form.Field>
                         <Label>
-                            {cmname}&nbsp;
-                            <Dropdown options={options} value={cmlevel} onChange={(e, {value})=>this.onFormFieldUpdate(prop, {name:cmname, level:value as number})}/>
-                            <Icon name="delete" circular inverted color="red" onClick={()=>this.onFormFieldUpdate(prop, undefined)}/>
+                            {propVal.value}<Icon name="delete" circular inverted color="red" onClick={() => this.onFormFieldUpdate(prop, undefined)} />
                         </Label>
                     </Form.Field>
                 ]
             }
             else {
+                let values: Entity[];
+                let error = {
+                    error : prop.isRequired
+                }
+
+                switch (prop.type) {
+                    case PropertyType.item: values = this.props.model.items; break;
+                    case PropertyType.resource: values = this.props.model.resources; break;
+                    case PropertyType.crafter: values = this.props.model.crafters; break;
+                }
                 return [
-                    <Form.Field key={prop.name} label={prop.name}/>,
+                    <Form.Field {...error} required={prop.isRequired} key={prop.name} label={prop.name} />,
+                    <NamedPicker
+                        key={`${prop.name}-picker`}
+                        iconProps={{ name: "search", circular: true }}
+                        values={values}
+                        onSelect={(e: Entity) => this.onFormFieldUpdate(prop, e.name)} />
+                ]
+            }
+        }
+        else if (prop.type == PropertyType.craftingMethod) {
+            if (propVal && propVal.value) {
+                if (typeof propVal.value === "string") {
+                    propVal.value = {
+                        name: propVal.value,
+                        level: 1
+                    }
+                }
+                let { name: cmname, level: cmlevel } = (propVal.value as { name: string, level: number })
+                let cm = this.props.model.craftingMethods.find(cm => cm.name == cmname)
+                let maxLevel = cm ? cm.level : 1
+                let options = []
+                for (let i = 1; i <= maxLevel; ++i) {
+                    options.push({ text: i.toString(), value: i })
+                }
+                return [
+                    <Form.Field required={prop.isRequired} label={prop.name} />,
+                    <Form.Field>
+                        <Label>
+                            {cmname}&nbsp;
+                            <Dropdown options={options} value={cmlevel} onChange={(e, { value }) => this.onFormFieldUpdate(prop, { name: cmname, level: value as number })} />
+                            <Icon name="delete" circular inverted color="red" onClick={() => this.onFormFieldUpdate(prop, undefined)} />
+                        </Label>
+                    </Form.Field>
+                ]
+            }
+            else {
+                let error = {
+                    error : prop.isRequired
+                }
+                return [
+                    <Form.Field {...error} required={prop.isRequired} key={prop.name} label={prop.name} />,
                     <NamedPicker
                         key={`${prop.name}-picker`}
                         iconProps={{ name: "search", circular: true }}
                         values={this.props.model.craftingMethods}
-                        onSelect={({name}) => this.onFormFieldUpdate(prop, {name, level:1})} />
+                        onSelect={(cm: CraftingMethod) => this.onFormFieldUpdate(prop, { name: cm.name, level: 1 })} />
                 ]
             }
         }
-        return <Form.Field key={prop.name} label={prop.name}><Label>TODO</Label></Form.Field>
+        return <span />
     }
 
     validateName() {
@@ -282,13 +302,12 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
             nameOpts["disabled"] = true
         }
         else {
-            if (!this.state.name.length) {
-                nameOpts["error"] = !this.validateName()
-            }
+            nameOpts["error"] = !this.validateName()
         }
         entityForm.push(<Form.Input
             key="item-name"
             label="Name"
+            required={true}
             placeholder="Name"
             value={this.state.name}
             {...nameOpts}
@@ -339,8 +358,8 @@ export class EntityEditor<T extends Entity> extends React.Component<EntityEditor
                     isButton={true}
                     haveDelete={true}
                     columns={4}
-                    onSelect={ent => this.onSelectEntity(ent as Entity)}
-                    onDelete={ent => this.onDeleteEntity(ent as Entity)}
+                    onSelect={(ent:Entity) => this.onSelectEntity(ent)}
+                    onDelete={(ent:Entity) => this.onDeleteEntity(ent)}
                 />
             </div>
         )

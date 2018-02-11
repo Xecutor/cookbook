@@ -1,3 +1,4 @@
+import Input from 'semantic-ui-react/dist/commonjs/elements/Input/Input';
 import { CookBookApp } from './../components/app';
 import { Named } from './named';
 import { Crafter } from './crafter';
@@ -58,6 +59,17 @@ export class Recipe implements Serializable {
         this.output = output ? output : new Array<Output>()
         this.tags = tags ? tags : new Tags();
         this.craftingMethod = craftingMethod ? craftingMethod : new CraftingMethod()
+    }
+    cleanExport() {
+        let rv : any = {}
+        rv.name = this.name
+        rv.input = [...this.input]
+        rv.output = [...this.output]
+        if (!this.tags.isEmpty()) {
+            rv.tags = this.tags.toState()
+        }
+        rv.craftingMethod = {name:this.craftingMethod.name, level:this.craftingMethod.level}
+        return rv
     }
     serialize() {
         return {
