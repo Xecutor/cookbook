@@ -15,6 +15,7 @@ interface ImportExportState{
     exportMode:string
     importText:string
     importMessage:string
+    pretty:boolean
 }
 
 export class ImportExportPage extends React.Component<ImportExportProps, ImportExportState> {
@@ -24,7 +25,8 @@ export class ImportExportPage extends React.Component<ImportExportProps, ImportE
             mode : "export",
             exportMode : "all",
             importText: "",
-            importMessage: ""
+            importMessage: "",
+            pretty:false
         }
     }
     onModeChange(mode:string) {
@@ -46,8 +48,9 @@ export class ImportExportPage extends React.Component<ImportExportProps, ImportE
         let exportMode;
         let warning;
         let importMessage;
+        let pretty;
         if(this.state.mode=="export") {
-            txt = this.state.exportMode === "all" ? this.props.model.serialize() : this.props.model.cleanExport()
+            txt = this.state.exportMode === "all" ? this.props.model.serialize(this.state.pretty) : this.props.model.cleanExport(this.state.pretty)
             if(this.state.exportMode==="clean") {
                 warning = <Message warning header="JSON exported in clean mode cannot be imported."/>
             }
@@ -57,6 +60,7 @@ export class ImportExportPage extends React.Component<ImportExportProps, ImportE
                 options={[{text:"All", value:"all"},{text:"Clean", value:"clean"}]}
                 onChange={(e,{value})=>this.onExportModeChanged(value as string)}
                 />
+            pretty = <Form.Checkbox checked={this.state.pretty} label="Pretty" onChange={(e, {checked})=>this.setState({pretty:checked})}/>
         }
         else {
             if (this.state.importMessage) {
@@ -76,6 +80,7 @@ export class ImportExportPage extends React.Component<ImportExportProps, ImportE
                             <Form.Radio name="mode" value="import" checked={this.state.mode==="import"} label="Import" onChange={(e,{value})=>this.onModeChange(value as string)}/>
                         </Form.Group>
                         {exportMode}
+                        {pretty}
                         {warning}
                         <Form.TextArea rows={10} autoHeight onChange={(e,data)=>this.onTextChanged(data.value as string)} value={txt}/>
                         {button}

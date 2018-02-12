@@ -47,16 +47,16 @@ export class Model {
 
         return result
     }
-    cleanExport() {
+    cleanExport(pretty:boolean) {
         let result : any = {}
         result.items = this.items.array.map(item=>item.cleanExport())
         result.resources = this.resources.array.map(res=>res.cleanExport())
         result.crafters = this.crafters.array.map(craft=>craft.cleanExport())
         result.craftingMethods = this.craftingMethods.array.map(cm=>cm.cleanExport())
         result.recipes = this.recipes.array.map(recipe=>recipe.cleanExport())
-        return JSON.stringify(result)
+        return JSON.stringify(result, undefined, pretty ? 2 : 0)
     }
-    serialize() {
+    serialize(pretty:boolean = false) {
         let result: any = {}
         result.tags = this.tags.serialize()
         result.properties = this.properties.serialize()
@@ -65,7 +65,7 @@ export class Model {
         result.crafters = this.crafters.serialize()
         result.craftingMethods = this.craftingMethods.serialize()
         result.recipes = this.recipes.serialize()
-        let resultStr = JSON.stringify(result);
+        let resultStr = JSON.stringify(result, undefined, pretty ? 2 : 0);
         console.log("saving:", resultStr);
         return resultStr;
     }
